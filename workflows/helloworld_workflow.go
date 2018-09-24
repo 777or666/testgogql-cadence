@@ -1,8 +1,10 @@
 package workflow
 
 import (
-	"context"
+	//"context"
 	"time"
+
+	"../activities"
 
 	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/workflow"
@@ -20,7 +22,7 @@ const ApplicationName = "axi-bpm test"
 // and activity function handlers.
 func init() {
 	workflow.Register(Workflow)
-	activity.Register(helloworldActivity)
+	activity.Register(activities.HelloworldActivity)
 }
 
 // Workflow workflow decider
@@ -35,7 +37,7 @@ func Workflow(ctx workflow.Context, name string) error {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("helloworld workflow started")
 	var helloworldResult string
-	err := workflow.ExecuteActivity(ctx, helloworldActivity, name).Get(ctx, &helloworldResult)
+	err := workflow.ExecuteActivity(ctx, activities.HelloworldActivity, name).Get(ctx, &helloworldResult)
 	if err != nil {
 		logger.Error("Activity failed.", zap.Error(err))
 		return err
@@ -46,8 +48,8 @@ func Workflow(ctx workflow.Context, name string) error {
 	return nil
 }
 
-func helloworldActivity(ctx context.Context, name string) (string, error) {
-	logger := activity.GetLogger(ctx)
-	logger.Info("axibpm activity started")
-	return "AXI-BPM. " + name + "!", nil
-}
+//func helloworldActivity(ctx context.Context, name string) (string, error) {
+//	logger := activity.GetLogger(ctx)
+//	logger.Info("axibpm activity started")
+//	return "AXI-BPM. " + name + "!", nil
+//}

@@ -8,16 +8,16 @@ import (
 	"sync"
 	"time"
 
-	"../workflow"
+	"../workflows"
 
-	"cadence_samples/common"
+	"../helpers"
 
 	"github.com/pborman/uuid"
 	"go.uber.org/cadence/client"
 	"go.uber.org/cadence/worker"
 )
 
-var h common.SampleHelper
+var h helpers.SampleHelper
 
 type resolver struct {
 	Rooms map[string]*Chatroom
@@ -56,7 +56,7 @@ type mutationResolver struct{ *resolver }
 
 // This needs to be done as part of a bootstrap step when the process starts.
 // The workers are supposed to be long running.
-func startWorkers(h *common.SampleHelper) {
+func startWorkers(h *helpers.SampleHelper) {
 	// Configure worker options.
 	workerOptions := worker.Options{
 		MetricsScope: h.Scope,
@@ -66,7 +66,7 @@ func startWorkers(h *common.SampleHelper) {
 }
 
 //Запуск тестовой задачи
-func startWorkflow(h *common.SampleHelper) {
+func startWorkflow(h *helpers.SampleHelper) {
 	workflowOptions := client.StartWorkflowOptions{
 		ID:                              "helloworld_" + uuid.New(),
 		TaskList:                        workflow.ApplicationName,
