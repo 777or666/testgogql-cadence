@@ -21,12 +21,12 @@ const ApplicationName = "axi-bpm test"
 // This is registration process where you register all your workflows
 // and activity function handlers.
 func init() {
-	workflow.Register(Workflow)
-	activity.Register(activities.HelloworldActivity)
+	workflow.Register(TestWorkflow)
+	activity.Register(activities.TestActivity)
 }
 
 // Workflow workflow decider
-func Workflow(ctx workflow.Context, name string) error {
+func TestWorkflow(ctx workflow.Context, name string) error {
 	ao := workflow.ActivityOptions{
 		ScheduleToStartTimeout: time.Minute,
 		StartToCloseTimeout:    time.Minute,
@@ -35,21 +35,15 @@ func Workflow(ctx workflow.Context, name string) error {
 	ctx = workflow.WithActivityOptions(ctx, ao)
 
 	logger := workflow.GetLogger(ctx)
-	logger.Info("helloworld workflow started")
-	var helloworldResult string
-	err := workflow.ExecuteActivity(ctx, activities.HelloworldActivity, name).Get(ctx, &helloworldResult)
+	logger.Info("Test workflow started")
+	var testResult string
+	err := workflow.ExecuteActivity(ctx, activities.TestActivity, name).Get(ctx, &testResult)
 	if err != nil {
 		logger.Error("Activity failed.", zap.Error(err))
 		return err
 	}
 
-	logger.Info("Workflow completed.", zap.String("Result", helloworldResult))
+	logger.Info("Workflow completed.", zap.String("Result", testResult))
 
 	return nil
 }
-
-//func helloworldActivity(ctx context.Context, name string) (string, error) {
-//	logger := activity.GetLogger(ctx)
-//	logger.Info("axibpm activity started")
-//	return "AXI-BPM. " + name + "!", nil
-//}

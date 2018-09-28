@@ -1,4 +1,4 @@
-# config for sample
+# config
 domain: "axibpm-domain"
 service: "cadence-frontend"
 host: "10.174.18.121:7933"

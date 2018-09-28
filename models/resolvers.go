@@ -68,12 +68,12 @@ func startWorkers(h *helpers.SampleHelper) {
 //Запуск тестовой задачи
 func startWorkflow(h *helpers.SampleHelper) {
 	workflowOptions := client.StartWorkflowOptions{
-		ID:                              "helloworld_" + uuid.New(),
+		ID:                              "test_" + uuid.New(),
 		TaskList:                        workflow.ApplicationName,
 		ExecutionStartToCloseTimeout:    time.Minute,
 		DecisionTaskStartToCloseTimeout: time.Minute,
 	}
-	h.StartWorkflow(workflowOptions, workflow.Workflow, "Согласовать ТКП")
+	h.StartWorkflow(workflowOptions, workflow.TestWorkflow, "Тест бизнес-процессов")
 }
 
 func (r *mutationResolver) Post(ctx context.Context, text string, username string, roomName string) (Message, error) {
