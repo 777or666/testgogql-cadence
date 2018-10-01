@@ -1,25 +1,36 @@
-type Chatroom {
-    name: String!
-    messages: [Message!]!
+type Domain {
+	id: ID!
+ 	name: String!
+	workflows: [Workflow!]!
 }
 
-type Message {
-    id: ID!
-    text: String!
-    createdBy: String!
-    createdAt: Time!
+type Workflow {
+	id: ID!	
+	runId: String
+	taskList: String!
+	name: String!
+	startedAt: Time!
+	closedTime: Time!
+	jsonHistory: String
+	input: String
+	result: String
 }
+
 
 type Query {
-    room(name:String!): Chatroom
+	Domain(id: ID!): Domain
+	allDomains(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: String): [Domain]
+	Workflow(id: ID!): Workflow
+	allWorkflows(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: String): [Workflow]
 }
 
 type Mutation {
-    post(text: String!, username: String!, roomName: String!): Message!
+	startWorkflow(id: ID!, name: String!, taskList: String!, input: String): Workflow!
+	cancelWorkflow(id: ID!): Workflow!
 }
 
 type Subscription {
-    messageAdded(roomName: String!): Message!
+	workflow : Workflow!
 }
 
 scalar Time

@@ -6,9 +6,20 @@ import (
 	time "time"
 )
 
-type Message struct {
-	ID        string    `json:"id"`
-	Text      string    `json:"text"`
-	CreatedBy string    `json:"createdBy"`
-	CreatedAt time.Time `json:"createdAt"`
+type Domain struct {
+	ID        string     `json:"id"`
+	Name      string     `json:"name"`
+	Workflows []Workflow `json:"workflows"`
+}
+
+type Workflow struct {
+	ID          string    `json:"id"`
+	RunID       *string   `json:"runId"`
+	TaskList    string    `json:"taskList"`
+	Name        string    `json:"name"`
+	StartedAt   time.Time `json:"startedAt"`
+	ClosedTime  time.Time `json:"closedTime"`
+	JSONHistory *string   `json:"jsonHistory"`
+	Input       *string   `json:"input"`
+	Result      *string   `json:"result"`
 }

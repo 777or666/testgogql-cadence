@@ -40,85 +40,295 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	Chatroom struct {
-		Name     func(childComplexity int) int
-		Messages func(childComplexity int) int
-	}
-
-	Message struct {
+	Domain struct {
 		Id        func(childComplexity int) int
-		Text      func(childComplexity int) int
-		CreatedBy func(childComplexity int) int
-		CreatedAt func(childComplexity int) int
+		Name      func(childComplexity int) int
+		Workflows func(childComplexity int) int
 	}
 
 	Mutation struct {
-		Post func(childComplexity int, text string, username string, roomName string) int
+		StartWorkflow  func(childComplexity int, id string, name string, taskList string, input *string) int
+		CancelWorkflow func(childComplexity int, id string) int
 	}
 
 	Query struct {
-		Room func(childComplexity int, name string) int
+		Domain       func(childComplexity int, id string) int
+		AllDomains   func(childComplexity int, page *int, perPage *int, sortField *string, sortOrder *string, filter *string) int
+		Workflow     func(childComplexity int, id string) int
+		AllWorkflows func(childComplexity int, page *int, perPage *int, sortField *string, sortOrder *string, filter *string) int
 	}
 
 	Subscription struct {
-		MessageAdded func(childComplexity int, roomName string) int
+		Workflow func(childComplexity int) int
+	}
+
+	Workflow struct {
+		Id          func(childComplexity int) int
+		RunId       func(childComplexity int) int
+		TaskList    func(childComplexity int) int
+		Name        func(childComplexity int) int
+		StartedAt   func(childComplexity int) int
+		ClosedTime  func(childComplexity int) int
+		JsonHistory func(childComplexity int) int
+		Input       func(childComplexity int) int
+		Result      func(childComplexity int) int
 	}
 }
 
 type MutationResolver interface {
-	Post(ctx context.Context, text string, username string, roomName string) (Message, error)
+	StartWorkflow(ctx context.Context, id string, name string, taskList string, input *string) (Workflow, error)
+	CancelWorkflow(ctx context.Context, id string) (Workflow, error)
 }
 type QueryResolver interface {
-	Room(ctx context.Context, name string) (*Chatroom, error)
+	Domain(ctx context.Context, id string) (*Domain, error)
+	AllDomains(ctx context.Context, page *int, perPage *int, sortField *string, sortOrder *string, filter *string) ([]*Domain, error)
+	Workflow(ctx context.Context, id string) (*Workflow, error)
+	AllWorkflows(ctx context.Context, page *int, perPage *int, sortField *string, sortOrder *string, filter *string) ([]*Workflow, error)
 }
 type SubscriptionResolver interface {
-	MessageAdded(ctx context.Context, roomName string) (<-chan Message, error)
+	Workflow(ctx context.Context) (<-chan Workflow, error)
 }
 
-func field_Mutation_post_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func field_Mutation_startWorkflow_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["text"]; ok {
+	if tmp, ok := rawArgs["id"]; ok {
 		var err error
-		arg0, err = graphql.UnmarshalString(tmp)
+		arg0, err = graphql.UnmarshalID(tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["text"] = arg0
+	args["id"] = arg0
 	var arg1 string
-	if tmp, ok := rawArgs["username"]; ok {
+	if tmp, ok := rawArgs["name"]; ok {
 		var err error
 		arg1, err = graphql.UnmarshalString(tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["username"] = arg1
+	args["name"] = arg1
 	var arg2 string
-	if tmp, ok := rawArgs["roomName"]; ok {
+	if tmp, ok := rawArgs["taskList"]; ok {
 		var err error
 		arg2, err = graphql.UnmarshalString(tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["roomName"] = arg2
-	return args, nil
-
-}
-
-func field_Query_room_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["name"]; ok {
+	args["taskList"] = arg2
+	var arg3 *string
+	if tmp, ok := rawArgs["input"]; ok {
 		var err error
-		arg0, err = graphql.UnmarshalString(tmp)
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg3 = &ptr1
+		}
+
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["name"] = arg0
+	args["input"] = arg3
+	return args, nil
+
+}
+
+func field_Mutation_cancelWorkflow_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		var err error
+		arg0, err = graphql.UnmarshalID(tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+
+}
+
+func field_Query_Domain_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		var err error
+		arg0, err = graphql.UnmarshalID(tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+
+}
+
+func field_Query_allDomains_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["page"]; ok {
+		var err error
+		var ptr1 int
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalInt(tmp)
+			arg0 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["page"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["perPage"]; ok {
+		var err error
+		var ptr1 int
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalInt(tmp)
+			arg1 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["perPage"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["sortField"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg2 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sortField"] = arg2
+	var arg3 *string
+	if tmp, ok := rawArgs["sortOrder"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg3 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sortOrder"] = arg3
+	var arg4 *string
+	if tmp, ok := rawArgs["filter"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg4 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg4
+	return args, nil
+
+}
+
+func field_Query_Workflow_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		var err error
+		arg0, err = graphql.UnmarshalID(tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+
+}
+
+func field_Query_allWorkflows_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["page"]; ok {
+		var err error
+		var ptr1 int
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalInt(tmp)
+			arg0 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["page"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["perPage"]; ok {
+		var err error
+		var ptr1 int
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalInt(tmp)
+			arg1 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["perPage"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["sortField"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg2 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sortField"] = arg2
+	var arg3 *string
+	if tmp, ok := rawArgs["sortOrder"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg3 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sortOrder"] = arg3
+	var arg4 *string
+	if tmp, ok := rawArgs["filter"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg4 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg4
 	return args, nil
 
 }
@@ -134,21 +344,6 @@ func field_Query___type_args(rawArgs map[string]interface{}) (map[string]interfa
 		}
 	}
 	args["name"] = arg0
-	return args, nil
-
-}
-
-func field_Subscription_messageAdded_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["roomName"]; ok {
-		var err error
-		arg0, err = graphql.UnmarshalString(tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["roomName"] = arg0
 	return args, nil
 
 }
@@ -196,83 +391,168 @@ func (e *executableSchema) Schema() *ast.Schema {
 func (e *executableSchema) Complexity(typeName, field string, childComplexity int, rawArgs map[string]interface{}) (int, bool) {
 	switch typeName + "." + field {
 
-	case "Chatroom.name":
-		if e.complexity.Chatroom.Name == nil {
+	case "Domain.id":
+		if e.complexity.Domain.Id == nil {
 			break
 		}
 
-		return e.complexity.Chatroom.Name(childComplexity), true
+		return e.complexity.Domain.Id(childComplexity), true
 
-	case "Chatroom.messages":
-		if e.complexity.Chatroom.Messages == nil {
+	case "Domain.name":
+		if e.complexity.Domain.Name == nil {
 			break
 		}
 
-		return e.complexity.Chatroom.Messages(childComplexity), true
+		return e.complexity.Domain.Name(childComplexity), true
 
-	case "Message.id":
-		if e.complexity.Message.Id == nil {
+	case "Domain.workflows":
+		if e.complexity.Domain.Workflows == nil {
 			break
 		}
 
-		return e.complexity.Message.Id(childComplexity), true
+		return e.complexity.Domain.Workflows(childComplexity), true
 
-	case "Message.text":
-		if e.complexity.Message.Text == nil {
+	case "Mutation.startWorkflow":
+		if e.complexity.Mutation.StartWorkflow == nil {
 			break
 		}
 
-		return e.complexity.Message.Text(childComplexity), true
-
-	case "Message.createdBy":
-		if e.complexity.Message.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.Message.CreatedBy(childComplexity), true
-
-	case "Message.createdAt":
-		if e.complexity.Message.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.Message.CreatedAt(childComplexity), true
-
-	case "Mutation.post":
-		if e.complexity.Mutation.Post == nil {
-			break
-		}
-
-		args, err := field_Mutation_post_args(rawArgs)
+		args, err := field_Mutation_startWorkflow_args(rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Post(childComplexity, args["text"].(string), args["username"].(string), args["roomName"].(string)), true
+		return e.complexity.Mutation.StartWorkflow(childComplexity, args["id"].(string), args["name"].(string), args["taskList"].(string), args["input"].(*string)), true
 
-	case "Query.room":
-		if e.complexity.Query.Room == nil {
+	case "Mutation.cancelWorkflow":
+		if e.complexity.Mutation.CancelWorkflow == nil {
 			break
 		}
 
-		args, err := field_Query_room_args(rawArgs)
+		args, err := field_Mutation_cancelWorkflow_args(rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.Room(childComplexity, args["name"].(string)), true
+		return e.complexity.Mutation.CancelWorkflow(childComplexity, args["id"].(string)), true
 
-	case "Subscription.messageAdded":
-		if e.complexity.Subscription.MessageAdded == nil {
+	case "Query.Domain":
+		if e.complexity.Query.Domain == nil {
 			break
 		}
 
-		args, err := field_Subscription_messageAdded_args(rawArgs)
+		args, err := field_Query_Domain_args(rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Subscription.MessageAdded(childComplexity, args["roomName"].(string)), true
+		return e.complexity.Query.Domain(childComplexity, args["id"].(string)), true
+
+	case "Query.allDomains":
+		if e.complexity.Query.AllDomains == nil {
+			break
+		}
+
+		args, err := field_Query_allDomains_args(rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AllDomains(childComplexity, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string)), true
+
+	case "Query.Workflow":
+		if e.complexity.Query.Workflow == nil {
+			break
+		}
+
+		args, err := field_Query_Workflow_args(rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Workflow(childComplexity, args["id"].(string)), true
+
+	case "Query.allWorkflows":
+		if e.complexity.Query.AllWorkflows == nil {
+			break
+		}
+
+		args, err := field_Query_allWorkflows_args(rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AllWorkflows(childComplexity, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string)), true
+
+	case "Subscription.workflow":
+		if e.complexity.Subscription.Workflow == nil {
+			break
+		}
+
+		return e.complexity.Subscription.Workflow(childComplexity), true
+
+	case "Workflow.id":
+		if e.complexity.Workflow.Id == nil {
+			break
+		}
+
+		return e.complexity.Workflow.Id(childComplexity), true
+
+	case "Workflow.runId":
+		if e.complexity.Workflow.RunId == nil {
+			break
+		}
+
+		return e.complexity.Workflow.RunId(childComplexity), true
+
+	case "Workflow.taskList":
+		if e.complexity.Workflow.TaskList == nil {
+			break
+		}
+
+		return e.complexity.Workflow.TaskList(childComplexity), true
+
+	case "Workflow.name":
+		if e.complexity.Workflow.Name == nil {
+			break
+		}
+
+		return e.complexity.Workflow.Name(childComplexity), true
+
+	case "Workflow.startedAt":
+		if e.complexity.Workflow.StartedAt == nil {
+			break
+		}
+
+		return e.complexity.Workflow.StartedAt(childComplexity), true
+
+	case "Workflow.closedTime":
+		if e.complexity.Workflow.ClosedTime == nil {
+			break
+		}
+
+		return e.complexity.Workflow.ClosedTime(childComplexity), true
+
+	case "Workflow.jsonHistory":
+		if e.complexity.Workflow.JsonHistory == nil {
+			break
+		}
+
+		return e.complexity.Workflow.JsonHistory(childComplexity), true
+
+	case "Workflow.input":
+		if e.complexity.Workflow.Input == nil {
+			break
+		}
+
+		return e.complexity.Workflow.Input(childComplexity), true
+
+	case "Workflow.result":
+		if e.complexity.Workflow.Result == nil {
+			break
+		}
+
+		return e.complexity.Workflow.Result(childComplexity), true
 
 	}
 	return 0, false
@@ -289,9 +569,9 @@ func (e *executableSchema) Query(ctx context.Context, op *ast.OperationDefinitio
 	})
 
 	return &graphql.Response{
-		Data:   buf,
-		Errors: ec.Errors,
-	}
+		Data:       buf,
+		Errors:     ec.Errors,
+		Extensions: ec.Extensions}
 }
 
 func (e *executableSchema) Mutation(ctx context.Context, op *ast.OperationDefinition) *graphql.Response {
@@ -305,8 +585,9 @@ func (e *executableSchema) Mutation(ctx context.Context, op *ast.OperationDefini
 	})
 
 	return &graphql.Response{
-		Data:   buf,
-		Errors: ec.Errors,
+		Data:       buf,
+		Errors:     ec.Errors,
+		Extensions: ec.Extensions,
 	}
 }
 
@@ -331,9 +612,14 @@ func (e *executableSchema) Subscription(ctx context.Context, op *ast.OperationDe
 			return buf.Bytes()
 		})
 
+		if buf == nil {
+			return nil
+		}
+
 		return &graphql.Response{
-			Data:   buf,
-			Errors: ec.Errors,
+			Data:       buf,
+			Errors:     ec.Errors,
+			Extensions: ec.Extensions,
 		}
 	}
 }
@@ -343,11 +629,11 @@ type executionContext struct {
 	*executableSchema
 }
 
-var chatroomImplementors = []string{"Chatroom"}
+var domainImplementors = []string{"Domain"}
 
 // nolint: gocyclo, errcheck, gas, goconst
-func (ec *executionContext) _Chatroom(ctx context.Context, sel ast.SelectionSet, obj *Chatroom) graphql.Marshaler {
-	fields := graphql.CollectFields(ctx, sel, chatroomImplementors)
+func (ec *executionContext) _Domain(ctx context.Context, sel ast.SelectionSet, obj *Domain) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, domainImplementors)
 
 	out := graphql.NewOrderedMap(len(fields))
 	invalid := false
@@ -356,14 +642,19 @@ func (ec *executionContext) _Chatroom(ctx context.Context, sel ast.SelectionSet,
 
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("Chatroom")
-		case "name":
-			out.Values[i] = ec._Chatroom_name(ctx, field, obj)
+			out.Values[i] = graphql.MarshalString("Domain")
+		case "id":
+			out.Values[i] = ec._Domain_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
-		case "messages":
-			out.Values[i] = ec._Chatroom_messages(ctx, field, obj)
+		case "name":
+			out.Values[i] = ec._Domain_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "workflows":
+			out.Values[i] = ec._Domain_workflows(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -379,9 +670,31 @@ func (ec *executionContext) _Chatroom(ctx context.Context, sel ast.SelectionSet,
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Chatroom_name(ctx context.Context, field graphql.CollectedField, obj *Chatroom) graphql.Marshaler {
+func (ec *executionContext) _Domain_id(ctx context.Context, field graphql.CollectedField, obj *Domain) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
-		Object: "Chatroom",
+		Object: "Domain",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.ID, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	return graphql.MarshalID(res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Domain_name(ctx context.Context, field graphql.CollectedField, obj *Domain) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Domain",
 		Args:   nil,
 		Field:  field,
 	}
@@ -401,15 +714,15 @@ func (ec *executionContext) _Chatroom_name(ctx context.Context, field graphql.Co
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Chatroom_messages(ctx context.Context, field graphql.CollectedField, obj *Chatroom) graphql.Marshaler {
+func (ec *executionContext) _Domain_workflows(ctx context.Context, field graphql.CollectedField, obj *Domain) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
-		Object: "Chatroom",
+		Object: "Domain",
 		Args:   nil,
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
-		return obj.Messages, nil
+		return obj.Workflows, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -417,7 +730,7 @@ func (ec *executionContext) _Chatroom_messages(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]Message)
+	res := resTmp.([]Workflow)
 	rctx.Result = res
 
 	arr1 := make(graphql.Array, len(res))
@@ -441,7 +754,7 @@ func (ec *executionContext) _Chatroom_messages(ctx context.Context, field graphq
 			}
 			arr1[idx1] = func() graphql.Marshaler {
 
-				return ec._Message(ctx, field.Selections, &res[idx1])
+				return ec._Workflow(ctx, field.Selections, &res[idx1])
 			}()
 		}
 		if isLen1 {
@@ -453,139 +766,6 @@ func (ec *executionContext) _Chatroom_messages(ctx context.Context, field graphq
 	}
 	wg.Wait()
 	return arr1
-}
-
-var messageImplementors = []string{"Message"}
-
-// nolint: gocyclo, errcheck, gas, goconst
-func (ec *executionContext) _Message(ctx context.Context, sel ast.SelectionSet, obj *Message) graphql.Marshaler {
-	fields := graphql.CollectFields(ctx, sel, messageImplementors)
-
-	out := graphql.NewOrderedMap(len(fields))
-	invalid := false
-	for i, field := range fields {
-		out.Keys[i] = field.Alias
-
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Message")
-		case "id":
-			out.Values[i] = ec._Message_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		case "text":
-			out.Values[i] = ec._Message_text(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		case "createdBy":
-			out.Values[i] = ec._Message_createdBy(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		case "createdAt":
-			out.Values[i] = ec._Message_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-
-	if invalid {
-		return graphql.Null
-	}
-	return out
-}
-
-// nolint: vetshadow
-func (ec *executionContext) _Message_id(ctx context.Context, field graphql.CollectedField, obj *Message) graphql.Marshaler {
-	rctx := &graphql.ResolverContext{
-		Object: "Message",
-		Args:   nil,
-		Field:  field,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
-		return obj.ID, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	rctx.Result = res
-	return graphql.MarshalID(res)
-}
-
-// nolint: vetshadow
-func (ec *executionContext) _Message_text(ctx context.Context, field graphql.CollectedField, obj *Message) graphql.Marshaler {
-	rctx := &graphql.ResolverContext{
-		Object: "Message",
-		Args:   nil,
-		Field:  field,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
-		return obj.Text, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	rctx.Result = res
-	return graphql.MarshalString(res)
-}
-
-// nolint: vetshadow
-func (ec *executionContext) _Message_createdBy(ctx context.Context, field graphql.CollectedField, obj *Message) graphql.Marshaler {
-	rctx := &graphql.ResolverContext{
-		Object: "Message",
-		Args:   nil,
-		Field:  field,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
-		return obj.CreatedBy, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	rctx.Result = res
-	return graphql.MarshalString(res)
-}
-
-// nolint: vetshadow
-func (ec *executionContext) _Message_createdAt(ctx context.Context, field graphql.CollectedField, obj *Message) graphql.Marshaler {
-	rctx := &graphql.ResolverContext{
-		Object: "Message",
-		Args:   nil,
-		Field:  field,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
-		return obj.CreatedAt, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	rctx.Result = res
-	return graphql.MarshalTime(res)
 }
 
 var mutationImplementors = []string{"Mutation"}
@@ -606,8 +786,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "post":
-			out.Values[i] = ec._Mutation_post(ctx, field)
+		case "startWorkflow":
+			out.Values[i] = ec._Mutation_startWorkflow(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "cancelWorkflow":
+			out.Values[i] = ec._Mutation_cancelWorkflow(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -623,9 +808,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Mutation_post(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+func (ec *executionContext) _Mutation_startWorkflow(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := field_Mutation_post_args(rawArgs)
+	args, err := field_Mutation_startWorkflow_args(rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -637,7 +822,7 @@ func (ec *executionContext) _Mutation_post(ctx context.Context, field graphql.Co
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
-		return ec.resolvers.Mutation().Post(ctx, args["text"].(string), args["username"].(string), args["roomName"].(string))
+		return ec.resolvers.Mutation().StartWorkflow(ctx, args["id"].(string), args["name"].(string), args["taskList"].(string), args["input"].(*string))
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -645,10 +830,39 @@ func (ec *executionContext) _Mutation_post(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.(Message)
+	res := resTmp.(Workflow)
 	rctx.Result = res
 
-	return ec._Message(ctx, field.Selections, &res)
+	return ec._Workflow(ctx, field.Selections, &res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Mutation_cancelWorkflow(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := field_Mutation_cancelWorkflow_args(rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx := &graphql.ResolverContext{
+		Object: "Mutation",
+		Args:   args,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Mutation().CancelWorkflow(ctx, args["id"].(string))
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(Workflow)
+	rctx.Result = res
+
+	return ec._Workflow(ctx, field.Selections, &res)
 }
 
 var queryImplementors = []string{"Query"}
@@ -670,10 +884,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "room":
+		case "Domain":
 			wg.Add(1)
 			go func(i int, field graphql.CollectedField) {
-				out.Values[i] = ec._Query_room(ctx, field)
+				out.Values[i] = ec._Query_Domain(ctx, field)
+				wg.Done()
+			}(i, field)
+		case "allDomains":
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Query_allDomains(ctx, field)
+				wg.Done()
+			}(i, field)
+		case "Workflow":
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Query_Workflow(ctx, field)
+				wg.Done()
+			}(i, field)
+		case "allWorkflows":
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Query_allWorkflows(ctx, field)
 				wg.Done()
 			}(i, field)
 		case "__type":
@@ -692,9 +924,9 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Query_room(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+func (ec *executionContext) _Query_Domain(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := field_Query_room_args(rawArgs)
+	args, err := field_Query_Domain_args(rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -706,19 +938,173 @@ func (ec *executionContext) _Query_room(ctx context.Context, field graphql.Colle
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
-		return ec.resolvers.Query().Room(ctx, args["name"].(string))
+		return ec.resolvers.Query().Domain(ctx, args["id"].(string))
 	})
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*Chatroom)
+	res := resTmp.(*Domain)
 	rctx.Result = res
 
 	if res == nil {
 		return graphql.Null
 	}
 
-	return ec._Chatroom(ctx, field.Selections, res)
+	return ec._Domain(ctx, field.Selections, res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Query_allDomains(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := field_Query_allDomains_args(rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx := &graphql.ResolverContext{
+		Object: "Query",
+		Args:   args,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Query().AllDomains(ctx, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string))
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*Domain)
+	rctx.Result = res
+
+	arr1 := make(graphql.Array, len(res))
+	var wg sync.WaitGroup
+
+	isLen1 := len(res) == 1
+	if !isLen1 {
+		wg.Add(len(res))
+	}
+
+	for idx1 := range res {
+		idx1 := idx1
+		rctx := &graphql.ResolverContext{
+			Index:  &idx1,
+			Result: res[idx1],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(idx1 int) {
+			if !isLen1 {
+				defer wg.Done()
+			}
+			arr1[idx1] = func() graphql.Marshaler {
+
+				if res[idx1] == nil {
+					return graphql.Null
+				}
+
+				return ec._Domain(ctx, field.Selections, res[idx1])
+			}()
+		}
+		if isLen1 {
+			f(idx1)
+		} else {
+			go f(idx1)
+		}
+
+	}
+	wg.Wait()
+	return arr1
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Query_Workflow(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := field_Query_Workflow_args(rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx := &graphql.ResolverContext{
+		Object: "Query",
+		Args:   args,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Query().Workflow(ctx, args["id"].(string))
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*Workflow)
+	rctx.Result = res
+
+	if res == nil {
+		return graphql.Null
+	}
+
+	return ec._Workflow(ctx, field.Selections, res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Query_allWorkflows(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := field_Query_allWorkflows_args(rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx := &graphql.ResolverContext{
+		Object: "Query",
+		Args:   args,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Query().AllWorkflows(ctx, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string))
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*Workflow)
+	rctx.Result = res
+
+	arr1 := make(graphql.Array, len(res))
+	var wg sync.WaitGroup
+
+	isLen1 := len(res) == 1
+	if !isLen1 {
+		wg.Add(len(res))
+	}
+
+	for idx1 := range res {
+		idx1 := idx1
+		rctx := &graphql.ResolverContext{
+			Index:  &idx1,
+			Result: res[idx1],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(idx1 int) {
+			if !isLen1 {
+				defer wg.Done()
+			}
+			arr1[idx1] = func() graphql.Marshaler {
+
+				if res[idx1] == nil {
+					return graphql.Null
+				}
+
+				return ec._Workflow(ctx, field.Selections, res[idx1])
+			}()
+		}
+		if isLen1 {
+			f(idx1)
+		} else {
+			go f(idx1)
+		}
+
+	}
+	wg.Wait()
+	return arr1
 }
 
 // nolint: vetshadow
@@ -789,24 +1175,18 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	}
 
 	switch fields[0].Name {
-	case "messageAdded":
-		return ec._Subscription_messageAdded(ctx, fields[0])
+	case "workflow":
+		return ec._Subscription_workflow(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
 }
 
-func (ec *executionContext) _Subscription_messageAdded(ctx context.Context, field graphql.CollectedField) func() graphql.Marshaler {
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := field_Subscription_messageAdded_args(rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return nil
-	}
+func (ec *executionContext) _Subscription_workflow(ctx context.Context, field graphql.CollectedField) func() graphql.Marshaler {
 	ctx = graphql.WithResolverContext(ctx, &graphql.ResolverContext{
 		Field: field,
 	})
-	results, err := ec.resolvers.Subscription().MessageAdded(ctx, args["roomName"].(string))
+	results, err := ec.resolvers.Subscription().Workflow(ctx)
 	if err != nil {
 		ec.Error(ctx, err)
 		return nil
@@ -818,10 +1198,270 @@ func (ec *executionContext) _Subscription_messageAdded(ctx context.Context, fiel
 		}
 		var out graphql.OrderedMap
 		out.Add(field.Alias, func() graphql.Marshaler {
-			return ec._Message(ctx, field.Selections, &res)
+			return ec._Workflow(ctx, field.Selections, &res)
 		}())
 		return &out
 	}
+}
+
+var workflowImplementors = []string{"Workflow"}
+
+// nolint: gocyclo, errcheck, gas, goconst
+func (ec *executionContext) _Workflow(ctx context.Context, sel ast.SelectionSet, obj *Workflow) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, workflowImplementors)
+
+	out := graphql.NewOrderedMap(len(fields))
+	invalid := false
+	for i, field := range fields {
+		out.Keys[i] = field.Alias
+
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Workflow")
+		case "id":
+			out.Values[i] = ec._Workflow_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "runId":
+			out.Values[i] = ec._Workflow_runId(ctx, field, obj)
+		case "taskList":
+			out.Values[i] = ec._Workflow_taskList(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "name":
+			out.Values[i] = ec._Workflow_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "startedAt":
+			out.Values[i] = ec._Workflow_startedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "closedTime":
+			out.Values[i] = ec._Workflow_closedTime(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "jsonHistory":
+			out.Values[i] = ec._Workflow_jsonHistory(ctx, field, obj)
+		case "input":
+			out.Values[i] = ec._Workflow_input(ctx, field, obj)
+		case "result":
+			out.Values[i] = ec._Workflow_result(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Workflow_id(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Workflow",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.ID, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	return graphql.MarshalID(res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Workflow_runId(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Workflow",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.RunID, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+
+	if res == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalString(*res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Workflow_taskList(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Workflow",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.TaskList, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	return graphql.MarshalString(res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Workflow_name(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Workflow",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.Name, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	return graphql.MarshalString(res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Workflow_startedAt(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Workflow",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.StartedAt, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	rctx.Result = res
+	return graphql.MarshalTime(res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Workflow_closedTime(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Workflow",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.ClosedTime, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	rctx.Result = res
+	return graphql.MarshalTime(res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Workflow_jsonHistory(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Workflow",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.JSONHistory, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+
+	if res == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalString(*res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Workflow_input(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Workflow",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.Input, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+
+	if res == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalString(*res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Workflow_result(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Workflow",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.Result, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+
+	if res == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalString(*res)
 }
 
 var __DirectiveImplementors = []string{"__Directive"}
@@ -2125,30 +2765,40 @@ func (ec *executionContext) introspectType(name string) *introspection.Type {
 }
 
 var parsedSchema = gqlparser.MustLoadSchema(
-	&ast.Source{Name: "schema.graphql", Input: `type Chatroom {
-    name: String!
-    messages: [Message!]!
+	&ast.Source{Name: "C:\\Users\\m.kravetz\\go\\src\\github.com\\777or666\\testgogql-cadence\\models\\schema.graphql", Input: `type Domain {
+	id: ID!
+ 	name: String!
+	workflows: [Workflow!]!
 }
 
-type Message {
-    id: ID!
-    text: String!
-    createdBy: String!
-    createdAt: Time!
+type Workflow {
+	id: ID!	
+	runId: String
+	taskList: String!
+	name: String!
+	startedAt: Time!
+	closedTime: Time!
+	jsonHistory: String
+	input: String
+	result: String
 }
+
 
 type Query {
-    room(name:String!): Chatroom
+	Domain(id: ID!): Domain
+	allDomains(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: String): [Domain]
+	Workflow(id: ID!): Workflow
+	allWorkflows(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: String): [Workflow]
 }
 
 type Mutation {
-    post(text: String!, username: String!, roomName: String!): Message!
+	startWorkflow(id: ID!, name: String!, taskList: String!, input: String): Workflow!
+	cancelWorkflow(id: ID!): Workflow!
 }
 
 type Subscription {
-    messageAdded(roomName: String!): Message!
+	workflow : Workflow!
 }
 
-scalar Time
-`},
+scalar Time`},
 )
