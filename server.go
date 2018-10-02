@@ -7,8 +7,8 @@ import (
 	"time"
 
 	//"github.com/99designs/gqlgen/example/chat"
-		
-	"./models"
+
+	"github.com/777or666/testgogql-cadence/models"
 	"github.com/99designs/gqlgen/handler"
 	gqlopentracing "github.com/99designs/gqlgen/opentracing"
 	//"github.com/gorilla/handlers"
@@ -23,7 +23,7 @@ import (
 
 func main() {
 	startAppdashServer()
-	
+
 	router := mux.NewRouter()
 
 	router.HandleFunc("/", handler.Playground("Todo", "/query"))
@@ -36,7 +36,7 @@ func main() {
 			},
 		})),
 	)
-	
+
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowCredentials: true,
