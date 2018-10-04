@@ -7,19 +7,23 @@ import (
 )
 
 type Domain struct {
-	ID        string     `json:"id"`
-	Name      string     `json:"name"`
-	Workflows []Workflow `json:"workflows"`
+	Name        string     `json:"name"`
+	Status      string     `json:"status"`
+	Description *string    `json:"description"`
+	OwnerEmail  *string    `json:"OwnerEmail"`
+	Workflows   []Workflow `json:"workflows"`
 }
 
 type Workflow struct {
-	ID          string    `json:"id"`
-	RunID       *string   `json:"runId"`
-	TaskList    string    `json:"taskList"`
-	Name        string    `json:"name"`
-	StartedAt   time.Time `json:"startedAt"`
-	ClosedTime  time.Time `json:"closedTime"`
-	JSONHistory *string   `json:"jsonHistory"`
-	Input       *string   `json:"input"`
-	Result      *string   `json:"result"`
+	ID            string    `json:"id"`
+	RunID         *string   `json:"runId"`
+	TaskList      string    `json:"taskList"`
+	Name          string    `json:"name"`
+	StartTime     time.Time `json:"startTime"`
+	CloseTime     time.Time `json:"closeTime"`
+	CloseStatus   *string   `json:"closeStatus"`
+	HistoryLength *int      `json:"historyLength"`
+	JSONHistory   *string   `json:"jsonHistory"`
+	Input         *string   `json:"input"`
+	Result        *string   `json:"result"`
 }

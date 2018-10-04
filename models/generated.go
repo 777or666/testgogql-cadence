@@ -41,9 +41,11 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Domain struct {
-		Id        func(childComplexity int) int
-		Name      func(childComplexity int) int
-		Workflows func(childComplexity int) int
+		Name        func(childComplexity int) int
+		Status      func(childComplexity int) int
+		Description func(childComplexity int) int
+		OwnerEmail  func(childComplexity int) int
+		Workflows   func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -52,10 +54,11 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Domain       func(childComplexity int, id string) int
-		AllDomains   func(childComplexity int, page *int, perPage *int, sortField *string, sortOrder *string, filter *string) int
-		Workflow     func(childComplexity int, id string) int
-		AllWorkflows func(childComplexity int, page *int, perPage *int, sortField *string, sortOrder *string, filter *string) int
+		Domain            func(childComplexity int, name *string) int
+		Workflow          func(childComplexity int, id string) int
+		AllWorkflows      func(childComplexity int, page *int, perPage *int, sortField *string, sortOrder *string, filter *string, domain *string) int
+		AllOpenWorkflows  func(childComplexity int, page *int, perPage *int, sortField *string, sortOrder *string, filter *string, domain *string) int
+		AllCloseWorkflows func(childComplexity int, page *int, perPage *int, sortField *string, sortOrder *string, filter *string, domain *string) int
 	}
 
 	Subscription struct {
@@ -63,15 +66,17 @@ type ComplexityRoot struct {
 	}
 
 	Workflow struct {
-		Id          func(childComplexity int) int
-		RunId       func(childComplexity int) int
-		TaskList    func(childComplexity int) int
-		Name        func(childComplexity int) int
-		StartedAt   func(childComplexity int) int
-		ClosedTime  func(childComplexity int) int
-		JsonHistory func(childComplexity int) int
-		Input       func(childComplexity int) int
-		Result      func(childComplexity int) int
+		Id            func(childComplexity int) int
+		RunId         func(childComplexity int) int
+		TaskList      func(childComplexity int) int
+		Name          func(childComplexity int) int
+		StartTime     func(childComplexity int) int
+		CloseTime     func(childComplexity int) int
+		CloseStatus   func(childComplexity int) int
+		HistoryLength func(childComplexity int) int
+		JsonHistory   func(childComplexity int) int
+		Input         func(childComplexity int) int
+		Result        func(childComplexity int) int
 	}
 }
 
@@ -80,10 +85,11 @@ type MutationResolver interface {
 	CancelWorkflow(ctx context.Context, id string) (Workflow, error)
 }
 type QueryResolver interface {
-	Domain(ctx context.Context, id string) (*Domain, error)
-	AllDomains(ctx context.Context, page *int, perPage *int, sortField *string, sortOrder *string, filter *string) ([]*Domain, error)
+	Domain(ctx context.Context, name *string) (*Domain, error)
 	Workflow(ctx context.Context, id string) (*Workflow, error)
-	AllWorkflows(ctx context.Context, page *int, perPage *int, sortField *string, sortOrder *string, filter *string) ([]*Workflow, error)
+	AllWorkflows(ctx context.Context, page *int, perPage *int, sortField *string, sortOrder *string, filter *string, domain *string) ([]*Workflow, error)
+	AllOpenWorkflows(ctx context.Context, page *int, perPage *int, sortField *string, sortOrder *string, filter *string, domain *string) ([]*Workflow, error)
+	AllCloseWorkflows(ctx context.Context, page *int, perPage *int, sortField *string, sortOrder *string, filter *string, domain *string) ([]*Workflow, error)
 }
 type SubscriptionResolver interface {
 	Workflow(ctx context.Context) (<-chan Workflow, error)
@@ -153,27 +159,12 @@ func field_Mutation_cancelWorkflow_args(rawArgs map[string]interface{}) (map[str
 
 func field_Query_Domain_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
+	var arg0 *string
+	if tmp, ok := rawArgs["name"]; ok {
 		var err error
-		arg0, err = graphql.UnmarshalID(tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-
-}
-
-func field_Query_allDomains_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	args := map[string]interface{}{}
-	var arg0 *int
-	if tmp, ok := rawArgs["page"]; ok {
-		var err error
-		var ptr1 int
+		var ptr1 string
 		if tmp != nil {
-			ptr1, err = graphql.UnmarshalInt(tmp)
+			ptr1, err = graphql.UnmarshalString(tmp)
 			arg0 = &ptr1
 		}
 
@@ -181,63 +172,7 @@ func field_Query_allDomains_args(rawArgs map[string]interface{}) (map[string]int
 			return nil, err
 		}
 	}
-	args["page"] = arg0
-	var arg1 *int
-	if tmp, ok := rawArgs["perPage"]; ok {
-		var err error
-		var ptr1 int
-		if tmp != nil {
-			ptr1, err = graphql.UnmarshalInt(tmp)
-			arg1 = &ptr1
-		}
-
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["perPage"] = arg1
-	var arg2 *string
-	if tmp, ok := rawArgs["sortField"]; ok {
-		var err error
-		var ptr1 string
-		if tmp != nil {
-			ptr1, err = graphql.UnmarshalString(tmp)
-			arg2 = &ptr1
-		}
-
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["sortField"] = arg2
-	var arg3 *string
-	if tmp, ok := rawArgs["sortOrder"]; ok {
-		var err error
-		var ptr1 string
-		if tmp != nil {
-			ptr1, err = graphql.UnmarshalString(tmp)
-			arg3 = &ptr1
-		}
-
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["sortOrder"] = arg3
-	var arg4 *string
-	if tmp, ok := rawArgs["filter"]; ok {
-		var err error
-		var ptr1 string
-		if tmp != nil {
-			ptr1, err = graphql.UnmarshalString(tmp)
-			arg4 = &ptr1
-		}
-
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["filter"] = arg4
+	args["name"] = arg0
 	return args, nil
 
 }
@@ -329,6 +264,200 @@ func field_Query_allWorkflows_args(rawArgs map[string]interface{}) (map[string]i
 		}
 	}
 	args["filter"] = arg4
+	var arg5 *string
+	if tmp, ok := rawArgs["domain"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg5 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["domain"] = arg5
+	return args, nil
+
+}
+
+func field_Query_allOpenWorkflows_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["page"]; ok {
+		var err error
+		var ptr1 int
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalInt(tmp)
+			arg0 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["page"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["perPage"]; ok {
+		var err error
+		var ptr1 int
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalInt(tmp)
+			arg1 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["perPage"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["sortField"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg2 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sortField"] = arg2
+	var arg3 *string
+	if tmp, ok := rawArgs["sortOrder"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg3 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sortOrder"] = arg3
+	var arg4 *string
+	if tmp, ok := rawArgs["filter"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg4 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg4
+	var arg5 *string
+	if tmp, ok := rawArgs["domain"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg5 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["domain"] = arg5
+	return args, nil
+
+}
+
+func field_Query_allCloseWorkflows_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["page"]; ok {
+		var err error
+		var ptr1 int
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalInt(tmp)
+			arg0 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["page"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["perPage"]; ok {
+		var err error
+		var ptr1 int
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalInt(tmp)
+			arg1 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["perPage"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["sortField"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg2 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sortField"] = arg2
+	var arg3 *string
+	if tmp, ok := rawArgs["sortOrder"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg3 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sortOrder"] = arg3
+	var arg4 *string
+	if tmp, ok := rawArgs["filter"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg4 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg4
+	var arg5 *string
+	if tmp, ok := rawArgs["domain"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg5 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["domain"] = arg5
 	return args, nil
 
 }
@@ -391,19 +520,33 @@ func (e *executableSchema) Schema() *ast.Schema {
 func (e *executableSchema) Complexity(typeName, field string, childComplexity int, rawArgs map[string]interface{}) (int, bool) {
 	switch typeName + "." + field {
 
-	case "Domain.id":
-		if e.complexity.Domain.Id == nil {
-			break
-		}
-
-		return e.complexity.Domain.Id(childComplexity), true
-
 	case "Domain.name":
 		if e.complexity.Domain.Name == nil {
 			break
 		}
 
 		return e.complexity.Domain.Name(childComplexity), true
+
+	case "Domain.status":
+		if e.complexity.Domain.Status == nil {
+			break
+		}
+
+		return e.complexity.Domain.Status(childComplexity), true
+
+	case "Domain.description":
+		if e.complexity.Domain.Description == nil {
+			break
+		}
+
+		return e.complexity.Domain.Description(childComplexity), true
+
+	case "Domain.OwnerEmail":
+		if e.complexity.Domain.OwnerEmail == nil {
+			break
+		}
+
+		return e.complexity.Domain.OwnerEmail(childComplexity), true
 
 	case "Domain.workflows":
 		if e.complexity.Domain.Workflows == nil {
@@ -446,19 +589,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Domain(childComplexity, args["id"].(string)), true
-
-	case "Query.allDomains":
-		if e.complexity.Query.AllDomains == nil {
-			break
-		}
-
-		args, err := field_Query_allDomains_args(rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.AllDomains(childComplexity, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string)), true
+		return e.complexity.Query.Domain(childComplexity, args["name"].(*string)), true
 
 	case "Query.Workflow":
 		if e.complexity.Query.Workflow == nil {
@@ -482,7 +613,31 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.AllWorkflows(childComplexity, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string)), true
+		return e.complexity.Query.AllWorkflows(childComplexity, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string), args["domain"].(*string)), true
+
+	case "Query.allOpenWorkflows":
+		if e.complexity.Query.AllOpenWorkflows == nil {
+			break
+		}
+
+		args, err := field_Query_allOpenWorkflows_args(rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AllOpenWorkflows(childComplexity, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string), args["domain"].(*string)), true
+
+	case "Query.allCloseWorkflows":
+		if e.complexity.Query.AllCloseWorkflows == nil {
+			break
+		}
+
+		args, err := field_Query_allCloseWorkflows_args(rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AllCloseWorkflows(childComplexity, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string), args["domain"].(*string)), true
 
 	case "Subscription.workflow":
 		if e.complexity.Subscription.Workflow == nil {
@@ -519,19 +674,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Workflow.Name(childComplexity), true
 
-	case "Workflow.startedAt":
-		if e.complexity.Workflow.StartedAt == nil {
+	case "Workflow.startTime":
+		if e.complexity.Workflow.StartTime == nil {
 			break
 		}
 
-		return e.complexity.Workflow.StartedAt(childComplexity), true
+		return e.complexity.Workflow.StartTime(childComplexity), true
 
-	case "Workflow.closedTime":
-		if e.complexity.Workflow.ClosedTime == nil {
+	case "Workflow.closeTime":
+		if e.complexity.Workflow.CloseTime == nil {
 			break
 		}
 
-		return e.complexity.Workflow.ClosedTime(childComplexity), true
+		return e.complexity.Workflow.CloseTime(childComplexity), true
+
+	case "Workflow.closeStatus":
+		if e.complexity.Workflow.CloseStatus == nil {
+			break
+		}
+
+		return e.complexity.Workflow.CloseStatus(childComplexity), true
+
+	case "Workflow.historyLength":
+		if e.complexity.Workflow.HistoryLength == nil {
+			break
+		}
+
+		return e.complexity.Workflow.HistoryLength(childComplexity), true
 
 	case "Workflow.jsonHistory":
 		if e.complexity.Workflow.JsonHistory == nil {
@@ -643,16 +812,20 @@ func (ec *executionContext) _Domain(ctx context.Context, sel ast.SelectionSet, o
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Domain")
-		case "id":
-			out.Values[i] = ec._Domain_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
 		case "name":
 			out.Values[i] = ec._Domain_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
+		case "status":
+			out.Values[i] = ec._Domain_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "description":
+			out.Values[i] = ec._Domain_description(ctx, field, obj)
+		case "OwnerEmail":
+			out.Values[i] = ec._Domain_OwnerEmail(ctx, field, obj)
 		case "workflows":
 			out.Values[i] = ec._Domain_workflows(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -667,28 +840,6 @@ func (ec *executionContext) _Domain(ctx context.Context, sel ast.SelectionSet, o
 		return graphql.Null
 	}
 	return out
-}
-
-// nolint: vetshadow
-func (ec *executionContext) _Domain_id(ctx context.Context, field graphql.CollectedField, obj *Domain) graphql.Marshaler {
-	rctx := &graphql.ResolverContext{
-		Object: "Domain",
-		Args:   nil,
-		Field:  field,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
-		return obj.ID, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	rctx.Result = res
-	return graphql.MarshalID(res)
 }
 
 // nolint: vetshadow
@@ -711,6 +862,74 @@ func (ec *executionContext) _Domain_name(ctx context.Context, field graphql.Coll
 	res := resTmp.(string)
 	rctx.Result = res
 	return graphql.MarshalString(res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Domain_status(ctx context.Context, field graphql.CollectedField, obj *Domain) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Domain",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.Status, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	return graphql.MarshalString(res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Domain_description(ctx context.Context, field graphql.CollectedField, obj *Domain) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Domain",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.Description, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+
+	if res == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalString(*res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Domain_OwnerEmail(ctx context.Context, field graphql.CollectedField, obj *Domain) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Domain",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.OwnerEmail, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+
+	if res == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalString(*res)
 }
 
 // nolint: vetshadow
@@ -890,12 +1109,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				out.Values[i] = ec._Query_Domain(ctx, field)
 				wg.Done()
 			}(i, field)
-		case "allDomains":
-			wg.Add(1)
-			go func(i int, field graphql.CollectedField) {
-				out.Values[i] = ec._Query_allDomains(ctx, field)
-				wg.Done()
-			}(i, field)
 		case "Workflow":
 			wg.Add(1)
 			go func(i int, field graphql.CollectedField) {
@@ -906,6 +1119,18 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			wg.Add(1)
 			go func(i int, field graphql.CollectedField) {
 				out.Values[i] = ec._Query_allWorkflows(ctx, field)
+				wg.Done()
+			}(i, field)
+		case "allOpenWorkflows":
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Query_allOpenWorkflows(ctx, field)
+				wg.Done()
+			}(i, field)
+		case "allCloseWorkflows":
+			wg.Add(1)
+			go func(i int, field graphql.CollectedField) {
+				out.Values[i] = ec._Query_allCloseWorkflows(ctx, field)
 				wg.Done()
 			}(i, field)
 		case "__type":
@@ -938,7 +1163,7 @@ func (ec *executionContext) _Query_Domain(ctx context.Context, field graphql.Col
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
-		return ec.resolvers.Query().Domain(ctx, args["id"].(string))
+		return ec.resolvers.Query().Domain(ctx, args["name"].(*string))
 	})
 	if resTmp == nil {
 		return graphql.Null
@@ -951,68 +1176,6 @@ func (ec *executionContext) _Query_Domain(ctx context.Context, field graphql.Col
 	}
 
 	return ec._Domain(ctx, field.Selections, res)
-}
-
-// nolint: vetshadow
-func (ec *executionContext) _Query_allDomains(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := field_Query_allDomains_args(rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	rctx := &graphql.ResolverContext{
-		Object: "Query",
-		Args:   args,
-		Field:  field,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
-		return ec.resolvers.Query().AllDomains(ctx, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string))
-	})
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*Domain)
-	rctx.Result = res
-
-	arr1 := make(graphql.Array, len(res))
-	var wg sync.WaitGroup
-
-	isLen1 := len(res) == 1
-	if !isLen1 {
-		wg.Add(len(res))
-	}
-
-	for idx1 := range res {
-		idx1 := idx1
-		rctx := &graphql.ResolverContext{
-			Index:  &idx1,
-			Result: res[idx1],
-		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
-		f := func(idx1 int) {
-			if !isLen1 {
-				defer wg.Done()
-			}
-			arr1[idx1] = func() graphql.Marshaler {
-
-				if res[idx1] == nil {
-					return graphql.Null
-				}
-
-				return ec._Domain(ctx, field.Selections, res[idx1])
-			}()
-		}
-		if isLen1 {
-			f(idx1)
-		} else {
-			go f(idx1)
-		}
-
-	}
-	wg.Wait()
-	return arr1
 }
 
 // nolint: vetshadow
@@ -1060,7 +1223,131 @@ func (ec *executionContext) _Query_allWorkflows(ctx context.Context, field graph
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
-		return ec.resolvers.Query().AllWorkflows(ctx, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string))
+		return ec.resolvers.Query().AllWorkflows(ctx, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string), args["domain"].(*string))
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*Workflow)
+	rctx.Result = res
+
+	arr1 := make(graphql.Array, len(res))
+	var wg sync.WaitGroup
+
+	isLen1 := len(res) == 1
+	if !isLen1 {
+		wg.Add(len(res))
+	}
+
+	for idx1 := range res {
+		idx1 := idx1
+		rctx := &graphql.ResolverContext{
+			Index:  &idx1,
+			Result: res[idx1],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(idx1 int) {
+			if !isLen1 {
+				defer wg.Done()
+			}
+			arr1[idx1] = func() graphql.Marshaler {
+
+				if res[idx1] == nil {
+					return graphql.Null
+				}
+
+				return ec._Workflow(ctx, field.Selections, res[idx1])
+			}()
+		}
+		if isLen1 {
+			f(idx1)
+		} else {
+			go f(idx1)
+		}
+
+	}
+	wg.Wait()
+	return arr1
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Query_allOpenWorkflows(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := field_Query_allOpenWorkflows_args(rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx := &graphql.ResolverContext{
+		Object: "Query",
+		Args:   args,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Query().AllOpenWorkflows(ctx, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string), args["domain"].(*string))
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*Workflow)
+	rctx.Result = res
+
+	arr1 := make(graphql.Array, len(res))
+	var wg sync.WaitGroup
+
+	isLen1 := len(res) == 1
+	if !isLen1 {
+		wg.Add(len(res))
+	}
+
+	for idx1 := range res {
+		idx1 := idx1
+		rctx := &graphql.ResolverContext{
+			Index:  &idx1,
+			Result: res[idx1],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(idx1 int) {
+			if !isLen1 {
+				defer wg.Done()
+			}
+			arr1[idx1] = func() graphql.Marshaler {
+
+				if res[idx1] == nil {
+					return graphql.Null
+				}
+
+				return ec._Workflow(ctx, field.Selections, res[idx1])
+			}()
+		}
+		if isLen1 {
+			f(idx1)
+		} else {
+			go f(idx1)
+		}
+
+	}
+	wg.Wait()
+	return arr1
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Query_allCloseWorkflows(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := field_Query_allCloseWorkflows_args(rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx := &graphql.ResolverContext{
+		Object: "Query",
+		Args:   args,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Query().AllCloseWorkflows(ctx, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string), args["domain"].(*string))
 	})
 	if resTmp == nil {
 		return graphql.Null
@@ -1235,16 +1522,20 @@ func (ec *executionContext) _Workflow(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
-		case "startedAt":
-			out.Values[i] = ec._Workflow_startedAt(ctx, field, obj)
+		case "startTime":
+			out.Values[i] = ec._Workflow_startTime(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
-		case "closedTime":
-			out.Values[i] = ec._Workflow_closedTime(ctx, field, obj)
+		case "closeTime":
+			out.Values[i] = ec._Workflow_closeTime(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
+		case "closeStatus":
+			out.Values[i] = ec._Workflow_closeStatus(ctx, field, obj)
+		case "historyLength":
+			out.Values[i] = ec._Workflow_historyLength(ctx, field, obj)
 		case "jsonHistory":
 			out.Values[i] = ec._Workflow_jsonHistory(ctx, field, obj)
 		case "input":
@@ -1352,7 +1643,7 @@ func (ec *executionContext) _Workflow_name(ctx context.Context, field graphql.Co
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Workflow_startedAt(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
+func (ec *executionContext) _Workflow_startTime(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "Workflow",
 		Args:   nil,
@@ -1360,7 +1651,7 @@ func (ec *executionContext) _Workflow_startedAt(ctx context.Context, field graph
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
-		return obj.StartedAt, nil
+		return obj.StartTime, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1374,7 +1665,7 @@ func (ec *executionContext) _Workflow_startedAt(ctx context.Context, field graph
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Workflow_closedTime(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
+func (ec *executionContext) _Workflow_closeTime(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "Workflow",
 		Args:   nil,
@@ -1382,7 +1673,7 @@ func (ec *executionContext) _Workflow_closedTime(ctx context.Context, field grap
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
-		return obj.ClosedTime, nil
+		return obj.CloseTime, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1393,6 +1684,52 @@ func (ec *executionContext) _Workflow_closedTime(ctx context.Context, field grap
 	res := resTmp.(time.Time)
 	rctx.Result = res
 	return graphql.MarshalTime(res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Workflow_closeStatus(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Workflow",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.CloseStatus, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+
+	if res == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalString(*res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Workflow_historyLength(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Workflow",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.HistoryLength, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	rctx.Result = res
+
+	if res == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalInt(*res)
 }
 
 // nolint: vetshadow
@@ -2765,9 +3102,11 @@ func (ec *executionContext) introspectType(name string) *introspection.Type {
 }
 
 var parsedSchema = gqlparser.MustLoadSchema(
-	&ast.Source{Name: "C:\\Users\\m.kravetz\\go\\src\\github.com\\777or666\\testgogql-cadence\\models\\schema.graphql", Input: `type Domain {
-	id: ID!
+	&ast.Source{Name: "C:\\Users\\m.kravetz\\go\\src\\github.com\\777or666\\testgogql-cadence\\models\\schema.graphql", Input: `type Domain {	
  	name: String!
+	status: String!
+	description: String
+	OwnerEmail: String
 	workflows: [Workflow!]!
 }
 
@@ -2776,19 +3115,22 @@ type Workflow {
 	runId: String
 	taskList: String!
 	name: String!
-	startedAt: Time!
-	closedTime: Time!
+	startTime: Time!
+	closeTime: Time!
+	closeStatus: String
+	historyLength: Int
 	jsonHistory: String
 	input: String
 	result: String
 }
 
 
-type Query {
-	Domain(id: ID!): Domain
-	allDomains(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: String): [Domain]
+type Query {	
+	Domain(name: String): Domain	
 	Workflow(id: ID!): Workflow
-	allWorkflows(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: String): [Workflow]
+	allWorkflows(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: String, domain: String): [Workflow]
+	allOpenWorkflows(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: String, domain: String): [Workflow]
+	allCloseWorkflows(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: String, domain: String): [Workflow]
 }
 
 type Mutation {

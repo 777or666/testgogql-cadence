@@ -1,17 +1,18 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"time"
 
-	//"github.com/99designs/gqlgen/example/chat"
+	"gopkg.in/yaml.v2"
 
 	"github.com/777or666/testgogql-cadence/models"
 	"github.com/99designs/gqlgen/handler"
 	gqlopentracing "github.com/99designs/gqlgen/opentracing"
-	//"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/opentracing/opentracing-go"
@@ -21,13 +22,32 @@ import (
 	"sourcegraph.com/sourcegraph/appdash/traceapp"
 )
 
+const (
+	configFile = "config/appsettings.yaml"
+)
+
+type Configuration struct {
+	UrlRestService string `yaml:"urlRestService"`
+}
+
 func main() {
 	startAppdashServer()
 
-	router := mux.NewRouter()
+	// Чтение файла конфигурации
+	configData, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		panic(fmt.Sprintf("Ошибка чтения файла: %v, Error: %v", configFile, err))
+	}
 
-	router.HandleFunc("/", handler.Playground("Todo", "/query"))
-	router.HandleFunc("/query", handler.GraphQL(models.NewExecutableSchema(models.New()),
+	var Config Configuration
+
+	if err := yaml.Unmarshal(configData, &Config); err != nil {
+		panic(fmt.Sprintf("Ошибка инициализации конфигурации: %v", err))
+	}
+
+	router := mux.NewRouter()
+	router.HandleFunc("/", handler.Playground("AXI-BPM CADENCE", "/query"))
+	router.HandleFunc("/query", handler.GraphQL(models.NewExecutableSchema(models.New(Config.UrlRestService)),
 		handler.ResolverMiddleware(gqlopentracing.ResolverMiddleware()),
 		handler.RequestMiddleware(gqlopentracing.RequestMiddleware()),
 		handler.WebsocketUpgrader(websocket.Upgrader{

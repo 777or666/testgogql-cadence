@@ -5,12 +5,14 @@ package models
 import (
 	context "context"
 
-	//"fmt"
+	//"log"
 
 	"encoding/json"
 
 	"github.com/go-resty/resty"
 )
+
+var UrlRestService string
 
 type resolver struct{}
 
@@ -24,7 +26,10 @@ func (r *resolver) Subscription() SubscriptionResolver {
 	return &subscriptionResolver{r}
 }
 
-func New() Config {
+func New(urlRestService string) Config {
+
+	UrlRestService = urlRestService
+
 	return Config{Resolvers: &resolver{}}
 }
 
@@ -39,48 +44,34 @@ func (r *mutationResolver) CancelWorkflow(ctx context.Context, id string) (Workf
 
 type queryResolver struct{ *resolver }
 
-//структура для теста маршалинга из json
-type cadenceDomain struct {
-	Name        string `json:"name"`
-	Status      string `json:"status"`
-	Description string `json:"description"`
-	OwnerEmail  string `json:"ownerEmail"`
-}
+func (r *queryResolver) Domain(ctx context.Context, name *string) (*Domain, error) {
 
-func (r *queryResolver) Domain(ctx context.Context, id string) (*Domain, error) {
+	//log.Println(UrlRestService)
 
-	resp, err := resty.R().Get("http://10.174.18.121:8088/api/domain/axibpm-domain")
+	resp, err := resty.R().Get(UrlRestService + "/api/domain/" + *name)
+
+	if err != nil {
+		panic(err.Error())
+	}
 
 	var domain Domain
 
-	if err == nil {
-
-		var cdnDomian cadenceDomain
-
-		cdnErr := json.Unmarshal(resp.Body(), &cdnDomian)
-
-		if cdnErr == nil {
-			domain = Domain{
-				ID:        id,
-				Name:      cdnDomian.Name,
-				Workflows: nil,
-			}
-		} else {
-			panic(cdnErr.Error())
-		}
-	} else {
+	if err := json.Unmarshal(resp.Body(), &domain); err != nil {
 		panic(err.Error())
 	}
 
 	return &domain, nil
 }
-func (r *queryResolver) AllDomains(ctx context.Context, page *int, perPage *int, sortField *string, sortOrder *string, filter *string) ([]*Domain, error) {
-	panic("not implemented")
-}
 func (r *queryResolver) Workflow(ctx context.Context, id string) (*Workflow, error) {
 	panic("not implemented")
 }
-func (r *queryResolver) AllWorkflows(ctx context.Context, page *int, perPage *int, sortField *string, sortOrder *string, filter *string) ([]*Workflow, error) {
+func (r *queryResolver) AllWorkflows(ctx context.Context, page *int, perPage *int, sortField *string, sortOrder *string, filter *string, domain *string) ([]*Workflow, error) {
+	panic("not implemented")
+}
+func (r *queryResolver) AllOpenWorkflows(ctx context.Context, page *int, perPage *int, sortField *string, sortOrder *string, filter *string, domain *string) ([]*Workflow, error) {
+	panic("not implemented")
+}
+func (r *queryResolver) AllCloseWorkflows(ctx context.Context, page *int, perPage *int, sortField *string, sortOrder *string, filter *string, domain *string) ([]*Workflow, error) {
 	panic("not implemented")
 }
 

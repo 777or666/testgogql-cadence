@@ -1,6 +1,8 @@
-type Domain {
-	id: ID!
+type Domain {	
  	name: String!
+	status: String!
+	description: String
+	OwnerEmail: String
 	workflows: [Workflow!]!
 }
 
@@ -9,19 +11,22 @@ type Workflow {
 	runId: String
 	taskList: String!
 	name: String!
-	startedAt: Time!
-	closedTime: Time!
+	startTime: Time!
+	closeTime: Time!
+	closeStatus: String
+	historyLength: Int
 	jsonHistory: String
 	input: String
 	result: String
 }
 
 
-type Query {
-	Domain(id: ID!): Domain
-	allDomains(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: String): [Domain]
+type Query {	
+	Domain(name: String): Domain	
 	Workflow(id: ID!): Workflow
-	allWorkflows(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: String): [Workflow]
+	allWorkflows(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: String, domain: String): [Workflow]
+	allOpenWorkflows(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: String, domain: String): [Workflow]
+	allCloseWorkflows(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: String, domain: String): [Workflow]
 }
 
 type Mutation {
