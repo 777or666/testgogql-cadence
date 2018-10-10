@@ -1,5 +1,6 @@
 # tetstgogql-cadence
 
+#####ГЕНЕРАЦИЯ МОДЕЛЕЙ
 Генерация моделей осуществляется приложением: gqlgen.exe
 Конфигурация: gqlgen.yml
 
@@ -9,7 +10,9 @@ GOPATH\go\src\github.com\99designs\gqlgen
 2 Запускаем gqlgen с параметром -с и указываем путь к файлу gqlgen.yml
 gqlgen -c GOPATH\go\src\github.com\777or666\testgogql-cadence\models\gqlgen.yml
 
+Для обновления/генерации resolver.go необходимо "удалить" текущую версию этого файла из папки.
 
+#####ЗАВИСИМОСТИ
 Ссылка на исходники: https://github.com/99designs/gqlgen
 Сайт разработчиков: https://gqlgen.com/
 

@@ -3,23 +3,31 @@ type Domain {
 	status: String!
 	description: String
 	OwnerEmail: String
-	workflows: [Workflow!]!
+	workflows: [Workflow!]
 }
 
 type Workflow {
-	id: ID!	
-	runId: String
+	id: ID!
+	workflowId: String!
+	runId: String!
 	taskList: String!
 	name: String!
 	startTime: Time!
-	closeTime: Time!
+	closeTime: Time
 	closeStatus: String
 	historyLength: Int
 	jsonHistory: String
 	input: String
 	result: String
+	activities: [Activity!]
+	createdAt: Time!
 }
 
+type Activity{
+	id: ID!	
+	token: String!
+	isApproved: Boolean
+}
 
 type Query {	
 	Domain(name: String): Domain	
@@ -30,8 +38,10 @@ type Query {
 }
 
 type Mutation {
-	startWorkflow(id: ID!, name: String!, taskList: String!, input: String): Workflow!
-	cancelWorkflow(id: ID!): Workflow!
+	workflowStart(id: ID!, name: String!, taskList: String!, input: String): Workflow!
+	workflowCancel(id: ID!): Workflow!
+	activityApproval(token: String!): Boolean
+	activityReject(token: String!): Boolean
 }
 
 type Subscription {

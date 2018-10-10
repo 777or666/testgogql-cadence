@@ -1,49 +1,49 @@
-package workflow
+package axibpmWorkflow
 
 import (
 	//"context"
+	"log"
 	"time"
 
-	"../activities"
+	"github.com/777or666/testgogql-cadence/activities"
 
-	"go.uber.org/cadence/activity"
+	//	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 )
 
-/**
- * This is the hello world workflow sample.
- */
+// Наименование воркфлоу
+const WorkflowName = "Согласование ТКП"
 
-// ApplicationName is the task list for this sample
-const ApplicationName = "axi-bpm test"
+// Регистрируем активности
+//func init() {
+//workflow.Register(TestWorkflow)
+//	activity.Register(axibpm_activities.TestActivity)
+//}
 
-// This is registration process where you register all your workflows
-// and activity function handlers.
-func init() {
-	workflow.Register(TestWorkflow)
-	activity.Register(activities.TestActivity)
-}
-
-// Workflow workflow decider
-func TestWorkflow(ctx workflow.Context, name string) error {
+// Выполняем наш воркфлоу
+func TestWorkflow(ctx workflow.Context, id string, token *string) error {
+	log.Println("START WORKFLOW!")
 	ao := workflow.ActivityOptions{
-		ScheduleToStartTimeout: time.Minute,
-		StartToCloseTimeout:    time.Minute,
+		ScheduleToStartTimeout: 1 * time.Minute,
+		StartToCloseTimeout:    1 * time.Minute,
 		HeartbeatTimeout:       time.Second * 20,
 	}
 	ctx = workflow.WithActivityOptions(ctx, ao)
 
 	logger := workflow.GetLogger(ctx)
-	logger.Info("Test workflow started")
+	//workflow.Go(ctx, func(ctx workflow.Context) {
+	logger.Info("СТАРТ: " + id)
+
 	var testResult string
-	err := workflow.ExecuteActivity(ctx, activities.TestActivity, name).Get(ctx, &testResult)
+	err := workflow.ExecuteActivity(ctx, axibpmActivities.TestActivity, id, token).Get(ctx, &testResult)
 	if err != nil {
-		logger.Error("Activity failed.", zap.Error(err))
-		return err
+		logger.Error("ОШИБКА! Активность не выполнена", zap.Error(err))
+		//return err
 	}
 
-	logger.Info("Workflow completed.", zap.String("Result", testResult))
+	logger.Info("ВЫПОЛНЕНО: "+id, zap.String("Result", testResult))
+	//})
 
 	return nil
 }

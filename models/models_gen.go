@@ -6,6 +6,12 @@ import (
 	time "time"
 )
 
+type Activity struct {
+	ID         string `json:"id"`
+	Token      string `json:"token"`
+	IsApproved *bool  `json:"isApproved"`
+}
+
 type Domain struct {
 	Name        string     `json:"name"`
 	Status      string     `json:"status"`
@@ -15,15 +21,18 @@ type Domain struct {
 }
 
 type Workflow struct {
-	ID            string    `json:"id"`
-	RunID         *string   `json:"runId"`
-	TaskList      string    `json:"taskList"`
-	Name          string    `json:"name"`
-	StartTime     time.Time `json:"startTime"`
-	CloseTime     time.Time `json:"closeTime"`
-	CloseStatus   *string   `json:"closeStatus"`
-	HistoryLength *int      `json:"historyLength"`
-	JSONHistory   *string   `json:"jsonHistory"`
-	Input         *string   `json:"input"`
-	Result        *string   `json:"result"`
+	ID            string     `json:"id"`
+	WorkflowID    string     `json:"workflowId"`
+	RunID         string     `json:"runId"`
+	TaskList      string     `json:"taskList"`
+	Name          string     `json:"name"`
+	StartTime     time.Time  `json:"startTime"`
+	CloseTime     *time.Time `json:"closeTime"`
+	CloseStatus   *string    `json:"closeStatus"`
+	HistoryLength *int       `json:"historyLength"`
+	JSONHistory   *string    `json:"jsonHistory"`
+	Input         *string    `json:"input"`
+	Result        *string    `json:"result"`
+	Activities    []Activity `json:"activities"`
+	CreatedAt     time.Time  `json:"createdAt"`
 }

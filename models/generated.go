@@ -40,6 +40,12 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Activity struct {
+		Id         func(childComplexity int) int
+		Token      func(childComplexity int) int
+		IsApproved func(childComplexity int) int
+	}
+
 	Domain struct {
 		Name        func(childComplexity int) int
 		Status      func(childComplexity int) int
@@ -49,8 +55,10 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		StartWorkflow  func(childComplexity int, id string, name string, taskList string, input *string) int
-		CancelWorkflow func(childComplexity int, id string) int
+		WorkflowStart    func(childComplexity int, id string, name string, taskList string, input *string) int
+		WorkflowCancel   func(childComplexity int, id string) int
+		ActivityApproval func(childComplexity int, token string) int
+		ActivityReject   func(childComplexity int, token string) int
 	}
 
 	Query struct {
@@ -67,6 +75,7 @@ type ComplexityRoot struct {
 
 	Workflow struct {
 		Id            func(childComplexity int) int
+		WorkflowId    func(childComplexity int) int
 		RunId         func(childComplexity int) int
 		TaskList      func(childComplexity int) int
 		Name          func(childComplexity int) int
@@ -77,12 +86,16 @@ type ComplexityRoot struct {
 		JsonHistory   func(childComplexity int) int
 		Input         func(childComplexity int) int
 		Result        func(childComplexity int) int
+		Activities    func(childComplexity int) int
+		CreatedAt     func(childComplexity int) int
 	}
 }
 
 type MutationResolver interface {
-	StartWorkflow(ctx context.Context, id string, name string, taskList string, input *string) (Workflow, error)
-	CancelWorkflow(ctx context.Context, id string) (Workflow, error)
+	WorkflowStart(ctx context.Context, id string, name string, taskList string, input *string) (Workflow, error)
+	WorkflowCancel(ctx context.Context, id string) (Workflow, error)
+	ActivityApproval(ctx context.Context, token string) (*bool, error)
+	ActivityReject(ctx context.Context, token string) (*bool, error)
 }
 type QueryResolver interface {
 	Domain(ctx context.Context, name *string) (*Domain, error)
@@ -95,7 +108,7 @@ type SubscriptionResolver interface {
 	Workflow(ctx context.Context) (<-chan Workflow, error)
 }
 
-func field_Mutation_startWorkflow_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func field_Mutation_workflowStart_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["id"]; ok {
@@ -142,7 +155,7 @@ func field_Mutation_startWorkflow_args(rawArgs map[string]interface{}) (map[stri
 
 }
 
-func field_Mutation_cancelWorkflow_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func field_Mutation_workflowCancel_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	args := map[string]interface{}{}
 	var arg0 string
 	if tmp, ok := rawArgs["id"]; ok {
@@ -153,6 +166,36 @@ func field_Mutation_cancelWorkflow_args(rawArgs map[string]interface{}) (map[str
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+
+}
+
+func field_Mutation_activityApproval_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["token"]; ok {
+		var err error
+		arg0, err = graphql.UnmarshalString(tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["token"] = arg0
+	return args, nil
+
+}
+
+func field_Mutation_activityReject_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["token"]; ok {
+		var err error
+		arg0, err = graphql.UnmarshalString(tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["token"] = arg0
 	return args, nil
 
 }
@@ -520,6 +563,27 @@ func (e *executableSchema) Schema() *ast.Schema {
 func (e *executableSchema) Complexity(typeName, field string, childComplexity int, rawArgs map[string]interface{}) (int, bool) {
 	switch typeName + "." + field {
 
+	case "Activity.id":
+		if e.complexity.Activity.Id == nil {
+			break
+		}
+
+		return e.complexity.Activity.Id(childComplexity), true
+
+	case "Activity.token":
+		if e.complexity.Activity.Token == nil {
+			break
+		}
+
+		return e.complexity.Activity.Token(childComplexity), true
+
+	case "Activity.isApproved":
+		if e.complexity.Activity.IsApproved == nil {
+			break
+		}
+
+		return e.complexity.Activity.IsApproved(childComplexity), true
+
 	case "Domain.name":
 		if e.complexity.Domain.Name == nil {
 			break
@@ -555,29 +619,53 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Domain.Workflows(childComplexity), true
 
-	case "Mutation.startWorkflow":
-		if e.complexity.Mutation.StartWorkflow == nil {
+	case "Mutation.workflowStart":
+		if e.complexity.Mutation.WorkflowStart == nil {
 			break
 		}
 
-		args, err := field_Mutation_startWorkflow_args(rawArgs)
+		args, err := field_Mutation_workflowStart_args(rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.StartWorkflow(childComplexity, args["id"].(string), args["name"].(string), args["taskList"].(string), args["input"].(*string)), true
+		return e.complexity.Mutation.WorkflowStart(childComplexity, args["id"].(string), args["name"].(string), args["taskList"].(string), args["input"].(*string)), true
 
-	case "Mutation.cancelWorkflow":
-		if e.complexity.Mutation.CancelWorkflow == nil {
+	case "Mutation.workflowCancel":
+		if e.complexity.Mutation.WorkflowCancel == nil {
 			break
 		}
 
-		args, err := field_Mutation_cancelWorkflow_args(rawArgs)
+		args, err := field_Mutation_workflowCancel_args(rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CancelWorkflow(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.WorkflowCancel(childComplexity, args["id"].(string)), true
+
+	case "Mutation.activityApproval":
+		if e.complexity.Mutation.ActivityApproval == nil {
+			break
+		}
+
+		args, err := field_Mutation_activityApproval_args(rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ActivityApproval(childComplexity, args["token"].(string)), true
+
+	case "Mutation.activityReject":
+		if e.complexity.Mutation.ActivityReject == nil {
+			break
+		}
+
+		args, err := field_Mutation_activityReject_args(rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ActivityReject(childComplexity, args["token"].(string)), true
 
 	case "Query.Domain":
 		if e.complexity.Query.Domain == nil {
@@ -653,6 +741,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Workflow.Id(childComplexity), true
 
+	case "Workflow.workflowId":
+		if e.complexity.Workflow.WorkflowId == nil {
+			break
+		}
+
+		return e.complexity.Workflow.WorkflowId(childComplexity), true
+
 	case "Workflow.runId":
 		if e.complexity.Workflow.RunId == nil {
 			break
@@ -722,6 +817,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Workflow.Result(childComplexity), true
+
+	case "Workflow.activities":
+		if e.complexity.Workflow.Activities == nil {
+			break
+		}
+
+		return e.complexity.Workflow.Activities(childComplexity), true
+
+	case "Workflow.createdAt":
+		if e.complexity.Workflow.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Workflow.CreatedAt(childComplexity), true
 
 	}
 	return 0, false
@@ -798,6 +907,110 @@ type executionContext struct {
 	*executableSchema
 }
 
+var activityImplementors = []string{"Activity"}
+
+// nolint: gocyclo, errcheck, gas, goconst
+func (ec *executionContext) _Activity(ctx context.Context, sel ast.SelectionSet, obj *Activity) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, activityImplementors)
+
+	out := graphql.NewOrderedMap(len(fields))
+	invalid := false
+	for i, field := range fields {
+		out.Keys[i] = field.Alias
+
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Activity")
+		case "id":
+			out.Values[i] = ec._Activity_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "token":
+			out.Values[i] = ec._Activity_token(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "isApproved":
+			out.Values[i] = ec._Activity_isApproved(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Activity_id(ctx context.Context, field graphql.CollectedField, obj *Activity) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Activity",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.ID, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	return graphql.MarshalID(res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Activity_token(ctx context.Context, field graphql.CollectedField, obj *Activity) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Activity",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.Token, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	return graphql.MarshalString(res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Activity_isApproved(ctx context.Context, field graphql.CollectedField, obj *Activity) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Activity",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.IsApproved, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	rctx.Result = res
+
+	if res == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalBoolean(*res)
+}
+
 var domainImplementors = []string{"Domain"}
 
 // nolint: gocyclo, errcheck, gas, goconst
@@ -828,9 +1041,6 @@ func (ec *executionContext) _Domain(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec._Domain_OwnerEmail(ctx, field, obj)
 		case "workflows":
 			out.Values[i] = ec._Domain_workflows(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -944,9 +1154,6 @@ func (ec *executionContext) _Domain_workflows(ctx context.Context, field graphql
 		return obj.Workflows, nil
 	})
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.([]Workflow)
@@ -1005,16 +1212,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "startWorkflow":
-			out.Values[i] = ec._Mutation_startWorkflow(ctx, field)
+		case "workflowStart":
+			out.Values[i] = ec._Mutation_workflowStart(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
-		case "cancelWorkflow":
-			out.Values[i] = ec._Mutation_cancelWorkflow(ctx, field)
+		case "workflowCancel":
+			out.Values[i] = ec._Mutation_workflowCancel(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
+		case "activityApproval":
+			out.Values[i] = ec._Mutation_activityApproval(ctx, field)
+		case "activityReject":
+			out.Values[i] = ec._Mutation_activityReject(ctx, field)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -1027,9 +1238,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Mutation_startWorkflow(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+func (ec *executionContext) _Mutation_workflowStart(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := field_Mutation_startWorkflow_args(rawArgs)
+	args, err := field_Mutation_workflowStart_args(rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -1041,7 +1252,7 @@ func (ec *executionContext) _Mutation_startWorkflow(ctx context.Context, field g
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
-		return ec.resolvers.Mutation().StartWorkflow(ctx, args["id"].(string), args["name"].(string), args["taskList"].(string), args["input"].(*string))
+		return ec.resolvers.Mutation().WorkflowStart(ctx, args["id"].(string), args["name"].(string), args["taskList"].(string), args["input"].(*string))
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1056,9 +1267,9 @@ func (ec *executionContext) _Mutation_startWorkflow(ctx context.Context, field g
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Mutation_cancelWorkflow(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+func (ec *executionContext) _Mutation_workflowCancel(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := field_Mutation_cancelWorkflow_args(rawArgs)
+	args, err := field_Mutation_workflowCancel_args(rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -1070,7 +1281,7 @@ func (ec *executionContext) _Mutation_cancelWorkflow(ctx context.Context, field 
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
-		return ec.resolvers.Mutation().CancelWorkflow(ctx, args["id"].(string))
+		return ec.resolvers.Mutation().WorkflowCancel(ctx, args["id"].(string))
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1082,6 +1293,64 @@ func (ec *executionContext) _Mutation_cancelWorkflow(ctx context.Context, field 
 	rctx.Result = res
 
 	return ec._Workflow(ctx, field.Selections, &res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Mutation_activityApproval(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := field_Mutation_activityApproval_args(rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx := &graphql.ResolverContext{
+		Object: "Mutation",
+		Args:   args,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Mutation().ActivityApproval(ctx, args["token"].(string))
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	rctx.Result = res
+
+	if res == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalBoolean(*res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Mutation_activityReject(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := field_Mutation_activityReject_args(rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx := &graphql.ResolverContext{
+		Object: "Mutation",
+		Args:   args,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Mutation().ActivityReject(ctx, args["token"].(string))
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	rctx.Result = res
+
+	if res == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalBoolean(*res)
 }
 
 var queryImplementors = []string{"Query"}
@@ -1510,8 +1779,16 @@ func (ec *executionContext) _Workflow(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
+		case "workflowId":
+			out.Values[i] = ec._Workflow_workflowId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "runId":
 			out.Values[i] = ec._Workflow_runId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "taskList":
 			out.Values[i] = ec._Workflow_taskList(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -1529,9 +1806,6 @@ func (ec *executionContext) _Workflow(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "closeTime":
 			out.Values[i] = ec._Workflow_closeTime(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
 		case "closeStatus":
 			out.Values[i] = ec._Workflow_closeStatus(ctx, field, obj)
 		case "historyLength":
@@ -1542,6 +1816,13 @@ func (ec *executionContext) _Workflow(ctx context.Context, sel ast.SelectionSet,
 			out.Values[i] = ec._Workflow_input(ctx, field, obj)
 		case "result":
 			out.Values[i] = ec._Workflow_result(ctx, field, obj)
+		case "activities":
+			out.Values[i] = ec._Workflow_activities(ctx, field, obj)
+		case "createdAt":
+			out.Values[i] = ec._Workflow_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -1576,6 +1857,28 @@ func (ec *executionContext) _Workflow_id(ctx context.Context, field graphql.Coll
 }
 
 // nolint: vetshadow
+func (ec *executionContext) _Workflow_workflowId(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Workflow",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.WorkflowID, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	return graphql.MarshalString(res)
+}
+
+// nolint: vetshadow
 func (ec *executionContext) _Workflow_runId(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "Workflow",
@@ -1587,15 +1890,14 @@ func (ec *executionContext) _Workflow_runId(ctx context.Context, field graphql.C
 		return obj.RunID, nil
 	})
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	rctx.Result = res
-
-	if res == nil {
-		return graphql.Null
-	}
-	return graphql.MarshalString(*res)
+	return graphql.MarshalString(res)
 }
 
 // nolint: vetshadow
@@ -1676,14 +1978,15 @@ func (ec *executionContext) _Workflow_closeTime(ctx context.Context, field graph
 		return obj.CloseTime, nil
 	})
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(*time.Time)
 	rctx.Result = res
-	return graphql.MarshalTime(res)
+
+	if res == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalTime(*res)
 }
 
 // nolint: vetshadow
@@ -1799,6 +2102,80 @@ func (ec *executionContext) _Workflow_result(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	return graphql.MarshalString(*res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Workflow_activities(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Workflow",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.Activities, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]Activity)
+	rctx.Result = res
+
+	arr1 := make(graphql.Array, len(res))
+	var wg sync.WaitGroup
+
+	isLen1 := len(res) == 1
+	if !isLen1 {
+		wg.Add(len(res))
+	}
+
+	for idx1 := range res {
+		idx1 := idx1
+		rctx := &graphql.ResolverContext{
+			Index:  &idx1,
+			Result: &res[idx1],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(idx1 int) {
+			if !isLen1 {
+				defer wg.Done()
+			}
+			arr1[idx1] = func() graphql.Marshaler {
+
+				return ec._Activity(ctx, field.Selections, &res[idx1])
+			}()
+		}
+		if isLen1 {
+			f(idx1)
+		} else {
+			go f(idx1)
+		}
+
+	}
+	wg.Wait()
+	return arr1
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Workflow_createdAt(ctx context.Context, field graphql.CollectedField, obj *Workflow) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Workflow",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.CreatedAt, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	rctx.Result = res
+	return graphql.MarshalTime(res)
 }
 
 var __DirectiveImplementors = []string{"__Directive"}
@@ -3107,23 +3484,31 @@ var parsedSchema = gqlparser.MustLoadSchema(
 	status: String!
 	description: String
 	OwnerEmail: String
-	workflows: [Workflow!]!
+	workflows: [Workflow!]
 }
 
 type Workflow {
-	id: ID!	
-	runId: String
+	id: ID!
+	workflowId: String!
+	runId: String!
 	taskList: String!
 	name: String!
 	startTime: Time!
-	closeTime: Time!
+	closeTime: Time
 	closeStatus: String
 	historyLength: Int
 	jsonHistory: String
 	input: String
 	result: String
+	activities: [Activity!]
+	createdAt: Time!
 }
 
+type Activity{
+	id: ID!	
+	token: String!
+	isApproved: Boolean
+}
 
 type Query {	
 	Domain(name: String): Domain	
@@ -3134,8 +3519,10 @@ type Query {
 }
 
 type Mutation {
-	startWorkflow(id: ID!, name: String!, taskList: String!, input: String): Workflow!
-	cancelWorkflow(id: ID!): Workflow!
+	workflowStart(id: ID!, name: String!, taskList: String!, input: String): Workflow!
+	workflowCancel(id: ID!): Workflow!
+	activityApproval(token: String!): Boolean
+	activityReject(token: String!): Boolean
 }
 
 type Subscription {

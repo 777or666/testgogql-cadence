@@ -98,7 +98,7 @@ func (h *SampleHelper) SetupServiceConfig() {
 }
 
 // StartWorkflow starts a workflow
-func (h *SampleHelper) StartWorkflow(options client.StartWorkflowOptions, workflow interface{}, args ...interface{}) {
+func (h *SampleHelper) StartWorkflow(options client.StartWorkflowOptions, workflow interface{}, args ...interface{}) (string, string) {
 	workflowClient, err := h.Builder.BuildCadenceClient()
 	if err != nil {
 		h.Logger.Error("Failed to build cadence client.", zap.Error(err))
@@ -113,6 +113,8 @@ func (h *SampleHelper) StartWorkflow(options client.StartWorkflowOptions, workfl
 	} else {
 		h.Logger.Info("Started Workflow", zap.String("WorkflowID", we.ID), zap.String("RunID", we.RunID))
 	}
+
+	return we.ID, we.RunID
 }
 
 // StartWorkers starts workflow worker and activity worker based on configured options.

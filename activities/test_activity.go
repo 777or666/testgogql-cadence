@@ -1,13 +1,22 @@
-package activities
+package axibpmActivities
 
 import (
 	"context"
+	"log"
 
 	"go.uber.org/cadence/activity"
 )
 
-func TestActivity(ctx context.Context, name string) (string, error) {
+func TestActivity(ctx context.Context, id string, token *string) (string, error) {
 	logger := activity.GetLogger(ctx)
-	logger.Info("axibpm activity started")
-	return "AXI-BPM. " + name + "!", nil
+
+	log.Println("!!TestActivity!!")
+
+	activityInfo := activity.GetInfo(ctx)
+	*token = string(activityInfo.TaskToken)
+
+	log.Println(*token)
+
+	logger.Info("AXIBPM_ACTIVITIES: НАЧАЛО")
+	return "AXI-BPM. " + id + "!", nil
 }
