@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/777or666/testgogql-cadence/activities"
-	"github.com/777or666/testgogql-cadence/workflows"
+	"github.com/777or666/testgogql-cadence/axibpmActivities"
+	"github.com/777or666/testgogql-cadence/axibpmWorkflows"
 
 	"github.com/777or666/testgogql-cadence/helpers"
 
@@ -26,6 +26,7 @@ import (
 var UrlRestService string
 var h helpers.SampleHelper
 var workflowClient client.Client
+var ApplicationName string //ВСЕГДА должно совпадать в воркере и всех его воркфлоу
 
 type resolver struct {
 	mu sync.Mutex // nolint: structcheck
@@ -44,15 +45,16 @@ func (r *resolver) Subscription() SubscriptionResolver {
 //****************************************
 // Регистрируем все воркфлоу и активности
 func init() {
-	workflow.Register(axibpmWorkflow.TestWorkflow)
+	workflow.Register(axibpmWorkflows.TestWorkflow)
 	activity.Register(axibpmActivities.TestActivity)
 }
 
 //****************************************
 
-func New(urlRestService string) Config {
+func New(urlRestService string, applicationName string) Config {
 
 	UrlRestService = urlRestService
+	ApplicationName = applicationName
 
 	h.SetupServiceConfig()
 	var err error
@@ -69,39 +71,42 @@ type mutationResolver struct{ *resolver }
 
 // Запускаем воркера
 func startWorkers(h *helpers.SampleHelper) {
-	// Конфигуарция воркера
+	// Конфигурация воркера
 	workerOptions := worker.Options{
 		MetricsScope: h.Scope,
 		Logger:       h.Logger,
 	}
-	h.StartWorkers(h.Config.DomainName, "AXI-BPM", workerOptions)
+	h.StartWorkers(h.Config.DomainName, ApplicationName, workerOptions)
 }
 
 //Запуск задачи
 //id -идентификатор
-//name - программное наименование функции воркфлоу с пакетом (пример, "axibpm_workflow.TestWorkflow")
+//name - программное наименование функции воркфлоу с пакетом (пример, "github.com/777or666/testgogql-cadence/axibpmWorkflows.TestWorkflow")
 //taskList - наименование типа списка задач
-func startWorkflow(h *helpers.SampleHelper, id string, name string, taskList string, token *string) (string, string) {
+func startWorkflow(h *helpers.SampleHelper, id string, name string, token *string) (string, string) {
 	workflowOptions := client.StartWorkflowOptions{
 		ID:                              id,
-		TaskList:                        taskList,
-		ExecutionStartToCloseTimeout:    time.Minute,
-		DecisionTaskStartToCloseTimeout: time.Minute,
+		TaskList:                        ApplicationName,
+		ExecutionStartToCloseTimeout:    2 * time.Minute,
+		DecisionTaskStartToCloseTimeout: 2 * time.Minute,
 	}
 
 	log.Println("startWorkflow! " + name)
 
-	return h.StartWorkflow(workflowOptions, name, id, token)
+	wfid, rid := h.StartWorkflow(workflowOptions, name, id, token)
+
+	return wfid, rid
 }
 
 //TODO: input возможно не нужны!
+//TODO: taskList точно не нужен, так как должен точно совпадать с аппнэймом в воркере!
 func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name string, taskList string, input *string) (Workflow, error) {
 	//r.mu.Lock()
 
-	var token string = ""
+	token := new(string)
 
 	//Запускаем задачу
-	wfId, wfRunId := startWorkflow(&h, id, name, taskList, &token)
+	wfId, wfRunId := startWorkflow(&h, id, name, token)
 
 	//r.mu.Unlock()
 
@@ -111,7 +116,7 @@ func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name st
 	x = make([]Activity, 1)
 	x[0] = Activity{
 		ID:    "123123123123123",
-		Token: token,
+		Token: *token,
 	}
 
 	//TODO: продумать состав, надо пробросить тамауты, инпуты и т.д.
@@ -131,17 +136,19 @@ func (r *mutationResolver) WorkflowCancel(ctx context.Context, id string) (Workf
 	panic("not implemented")
 }
 func (r *mutationResolver) ActivityApproval(ctx context.Context, token string) (*bool, error) {
-	//panic("not implemented")
 
-	state := "SUCCEED"
+	state := "APPROVED"
+
+	log.Println("пришел token: " + token)
 
 	var result bool
 
 	err := workflowClient.CompleteActivity(context.Background(), []byte(token), state, nil)
 	if err != nil {
-		panic("Задача не выполнена! ОШИБКА: " + err.Error())
+
+		log.Println("ОШИБКА! Задача не выполнена. " + err.Error())
 		result = false
-		return &result, err
+		return nil, err
 	}
 
 	result = true

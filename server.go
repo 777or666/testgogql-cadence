@@ -27,7 +27,8 @@ const (
 )
 
 type Configuration struct {
-	UrlRestService string `yaml:"urlRestService"`
+	UrlRestService  string `yaml:"urlRestService"`
+	ApplicationName string `yaml:"appname"`
 }
 
 func main() {
@@ -47,7 +48,7 @@ func main() {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", handler.Playground("AXI-BPM CADENCE", "/query"))
-	router.HandleFunc("/query", handler.GraphQL(models.NewExecutableSchema(models.New(Config.UrlRestService)),
+	router.HandleFunc("/query", handler.GraphQL(models.NewExecutableSchema(models.New(Config.UrlRestService, Config.ApplicationName)),
 		handler.ResolverMiddleware(gqlopentracing.ResolverMiddleware()),
 		handler.RequestMiddleware(gqlopentracing.RequestMiddleware()),
 		handler.WebsocketUpgrader(websocket.Upgrader{

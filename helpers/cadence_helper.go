@@ -105,6 +105,8 @@ func (h *SampleHelper) StartWorkflow(options client.StartWorkflowOptions, workfl
 		panic(err)
 	}
 
+	h.Logger.Info("workflow на старт: " + fmt.Sprintln(workflow))
+
 	we, err := workflowClient.StartWorkflow(context.Background(), options, workflow, args...)
 	if err != nil {
 		h.Logger.Error("Failed to create workflow", zap.Error(err))

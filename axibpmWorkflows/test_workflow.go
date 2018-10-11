@@ -1,11 +1,12 @@
-package axibpmWorkflow
+package axibpmWorkflows
 
 import (
 	//"context"
-	"log"
+
+	//"log"
 	"time"
 
-	"github.com/777or666/testgogql-cadence/activities"
+	"github.com/777or666/testgogql-cadence/axibpmActivities"
 
 	//	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/workflow"
@@ -22,28 +23,29 @@ const WorkflowName = "Согласование ТКП"
 //}
 
 // Выполняем наш воркфлоу
-func TestWorkflow(ctx workflow.Context, id string, token *string) error {
-	log.Println("START WORKFLOW!")
+func TestWorkflow(ctx workflow.Context, id string) (result string, err error) {
+
 	ao := workflow.ActivityOptions{
-		ScheduleToStartTimeout: 1 * time.Minute,
-		StartToCloseTimeout:    1 * time.Minute,
-		HeartbeatTimeout:       time.Second * 20,
+		ScheduleToStartTimeout: 5 * time.Minute,
+		StartToCloseTimeout:    5 * time.Minute,
 	}
 	ctx = workflow.WithActivityOptions(ctx, ao)
 
 	logger := workflow.GetLogger(ctx)
-	//workflow.Go(ctx, func(ctx workflow.Context) {
-	logger.Info("СТАРТ: " + id)
 
+	//workflow.Go(ctx, func(ctx workflow.Context) {
 	var testResult string
-	err := workflow.ExecuteActivity(ctx, axibpmActivities.TestActivity, id, token).Get(ctx, &testResult)
+
+	err = workflow.ExecuteActivity(ctx, axibpmActivities.TestActivity, id).Get(ctx, &testResult)
+
+	logger.Info("TestWorkflow result: " + testResult)
+
 	if err != nil {
 		logger.Error("ОШИБКА! Активность не выполнена", zap.Error(err))
-		//return err
+		return "", err
 	}
-
 	logger.Info("ВЫПОЛНЕНО: "+id, zap.String("Result", testResult))
 	//})
 
-	return nil
+	return "COMPLETED", nil
 }
