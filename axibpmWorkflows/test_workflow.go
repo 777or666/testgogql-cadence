@@ -16,12 +16,6 @@ import (
 // Наименование воркфлоу
 const WorkflowName = "Согласование ТКП"
 
-// Регистрируем активности
-//func init() {
-//workflow.Register(TestWorkflow)
-//	activity.Register(axibpm_activities.TestActivity)
-//}
-
 // Выполняем наш воркфлоу
 func TestWorkflow(ctx workflow.Context, id string) (result string, err error) {
 

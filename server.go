@@ -27,8 +27,9 @@ const (
 )
 
 type Configuration struct {
-	UrlRestService  string `yaml:"urlRestService"`
-	ApplicationName string `yaml:"appname"`
+	UrlRestService     string `yaml:"urlrestservice"`
+	ApplicationName    string `yaml:"appname"`
+	PrefixWorkflowFunc string `yaml: "prefixworkflowfunc"`
 }
 
 func main() {
@@ -48,7 +49,13 @@ func main() {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", handler.Playground("AXI-BPM CADENCE", "/query"))
-	router.HandleFunc("/query", handler.GraphQL(models.NewExecutableSchema(models.New(Config.UrlRestService, Config.ApplicationName)),
+	router.HandleFunc("/query", handler.GraphQL(
+		models.NewExecutableSchema(
+			models.New(
+				Config.UrlRestService,
+				Config.ApplicationName,
+				Config.PrefixWorkflowFunc,
+			)),
 		handler.ResolverMiddleware(gqlopentracing.ResolverMiddleware()),
 		handler.RequestMiddleware(gqlopentracing.RequestMiddleware()),
 		handler.WebsocketUpgrader(websocket.Upgrader{

@@ -27,6 +27,7 @@ var UrlRestService string
 var h helpers.SampleHelper
 var workflowClient client.Client
 var ApplicationName string //ВСЕГДА должно совпадать в воркере и всех его воркфлоу
+var PrefixWorkflowFunc string
 
 type resolver struct {
 	mu sync.Mutex // nolint: structcheck
@@ -51,15 +52,17 @@ func init() {
 
 //****************************************
 
-func New(urlRestService string, applicationName string) Config {
+func New(urlRestService string, applicationName string, prefixworkflowfunc string) Config {
 
 	UrlRestService = urlRestService
 	ApplicationName = applicationName
+	PrefixWorkflowFunc = prefixworkflowfunc
 
 	h.SetupServiceConfig()
 	var err error
 	workflowClient, err = h.Builder.BuildCadenceClient()
 	if err != nil {
+		log.Println("ОШИБКА при BuildCadenceClient: " + err.Error())
 		panic(err)
 	}
 	startWorkers(&h)
@@ -81,7 +84,7 @@ func startWorkers(h *helpers.SampleHelper) {
 
 //Запуск задачи
 //id -идентификатор
-//name - программное наименование функции воркфлоу с пакетом (пример, "github.com/777or666/testgogql-cadence/axibpmWorkflows.TestWorkflow")
+//name - программное наименование функции воркфлоу с пакетом (пример, "TestWorkflow")
 //taskList - наименование типа списка задач
 func startWorkflow(h *helpers.SampleHelper, id string, name string, token *string) (string, string) {
 	workflowOptions := client.StartWorkflowOptions{
@@ -91,9 +94,11 @@ func startWorkflow(h *helpers.SampleHelper, id string, name string, token *strin
 		DecisionTaskStartToCloseTimeout: 2 * time.Minute,
 	}
 
-	log.Println("startWorkflow! " + name)
+	//log.Println("startWorkflow! " + name)
 
-	wfid, rid := h.StartWorkflow(workflowOptions, name, id, token)
+	fullname := PrefixWorkflowFunc + name
+
+	wfid, rid := h.StartWorkflow(workflowOptions, fullname, id, token)
 
 	return wfid, rid
 }
