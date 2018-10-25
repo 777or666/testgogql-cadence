@@ -28,6 +28,7 @@ var h helpers.SampleHelper
 var workflowClient client.Client
 var ApplicationName string //ВСЕГДА должно совпадать в воркере и всех его воркфлоу
 var PrefixWorkflowFunc string
+var DomainId string //domainId не удалось вытащить из сервиса cadence-web поэтому задаем жестко
 
 type resolver struct {
 	mu sync.Mutex // nolint: structcheck
@@ -52,11 +53,12 @@ func init() {
 
 //****************************************
 
-func New(urlRestService string, applicationName string, prefixworkflowfunc string) Config {
+func New(urlRestService string, applicationName string, prefixworkflowfunc string, domainId string) Config {
 
 	UrlRestService = urlRestService
 	ApplicationName = applicationName
 	PrefixWorkflowFunc = prefixworkflowfunc
+	DomainId = domainId
 
 	h.SetupServiceConfig()
 	var err error
@@ -86,7 +88,7 @@ func startWorkers(h *helpers.SampleHelper) {
 //id -идентификатор
 //name - программное наименование функции воркфлоу с пакетом (пример, "TestWorkflow")
 //taskList - наименование типа списка задач
-func startWorkflow(h *helpers.SampleHelper, id string, name string, token *string) (string, string) {
+func startWorkflow(h *helpers.SampleHelper, id string, name string) (string, string) {
 	workflowOptions := client.StartWorkflowOptions{
 		ID:                              id,
 		TaskList:                        ApplicationName,
@@ -98,7 +100,7 @@ func startWorkflow(h *helpers.SampleHelper, id string, name string, token *strin
 
 	fullname := PrefixWorkflowFunc + name
 
-	wfid, rid := h.StartWorkflow(workflowOptions, fullname, id, token)
+	wfid, rid := h.StartWorkflow(workflowOptions, fullname, id)
 
 	return wfid, rid
 }
@@ -108,20 +110,25 @@ func startWorkflow(h *helpers.SampleHelper, id string, name string, token *strin
 func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name string, taskList string, input *string) (Workflow, error) {
 	//r.mu.Lock()
 
-	token := new(string)
+	//token := new(string)
 
 	//Запускаем задачу
-	wfId, wfRunId := startWorkflow(&h, id, name, token)
+	wfId, wfRunId := startWorkflow(&h, id, name)
 
 	//r.mu.Unlock()
 
-	cteatedt := time.Now()
+	cteatedAt := time.Now()
+
+	//монитруем токен
+	//{"domainId":"DomainId","workflowId":"wfId","runId":"wfRunId",
+	// "scheduleId":5,"scheduleAttempt":0,"activityId":""}
+	token := "{\"domainId\":\"" + DomainId + "\",\"workflowId\":\"" + wfId + "\",\"runId\":\"" + wfRunId + "\",\"scheduleId\":5,\"scheduleAttempt\":0,\"activityId\":\"\"}"
 
 	var x []Activity
 	x = make([]Activity, 1)
 	x[0] = Activity{
 		ID:    "123123123123123",
-		Token: *token,
+		Token: token,
 	}
 
 	//TODO: продумать состав, надо пробросить тамауты, инпуты и т.д.
@@ -131,7 +138,7 @@ func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name st
 		WorkflowID: wfId,
 		RunID:      wfRunId,
 		TaskList:   taskList,
-		CreatedAt:  cteatedt,
+		CreatedAt:  cteatedAt,
 		Activities: x,
 	}
 
@@ -140,6 +147,8 @@ func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name st
 func (r *mutationResolver) WorkflowCancel(ctx context.Context, id string) (Workflow, error) {
 	panic("not implemented")
 }
+
+//token вида {"domainId":"9d88d286-53e5-452d-93db-4ba8613f229f","workflowId":"73fe7be5-4504-449b-a9fe-7fa8023515e2","runId":"55493da9-5643-45d9-89eb-b0eb3828f9e9","scheduleId":5,"scheduleAttempt":0,"activityId":""}
 func (r *mutationResolver) ActivityApproval(ctx context.Context, token string) (*bool, error) {
 
 	state := "APPROVED"
@@ -159,6 +168,8 @@ func (r *mutationResolver) ActivityApproval(ctx context.Context, token string) (
 	result = true
 	return &result, nil
 }
+
+//token вида {"domainId":"9d88d286-53e5-452d-93db-4ba8613f229f","workflowId":"73fe7be5-4504-449b-a9fe-7fa8023515e2","runId":"55493da9-5643-45d9-89eb-b0eb3828f9e9","scheduleId":5,"scheduleAttempt":0,"activityId":""}
 func (r *mutationResolver) ActivityReject(ctx context.Context, token string) (*bool, error) {
 	panic("not implemented")
 }
