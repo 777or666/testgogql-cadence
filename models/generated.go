@@ -42,6 +42,8 @@ type DirectiveRoot struct {
 type ComplexityRoot struct {
 	Activity struct {
 		Id         func(childComplexity int) int
+		ActivityId func(childComplexity int) int
+		RunId      func(childComplexity int) int
 		Token      func(childComplexity int) int
 		IsApproved func(childComplexity int) int
 	}
@@ -55,10 +57,11 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		WorkflowStart    func(childComplexity int, id string, name string, taskList string, input *string) int
-		WorkflowCancel   func(childComplexity int, id string) int
-		ActivityApproval func(childComplexity int, token string) int
-		ActivityReject   func(childComplexity int, token string) int
+		WorkflowStart     func(childComplexity int, id string, name string, input *string) int
+		WorkflowCancel    func(childComplexity int, id string, runID *string) int
+		WorkflowTerminate func(childComplexity int, id string, runID *string, reason *string, info *string) int
+		ActivityPerform   func(childComplexity int, domain *string, workflowID string, runID *string, activityID string, info *string) int
+		ActivityFailed    func(childComplexity int, domain *string, workflowID string, runID *string, activityID string, info *string) int
 	}
 
 	Query struct {
@@ -92,10 +95,11 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	WorkflowStart(ctx context.Context, id string, name string, taskList string, input *string) (Workflow, error)
-	WorkflowCancel(ctx context.Context, id string) (Workflow, error)
-	ActivityApproval(ctx context.Context, token string) (*bool, error)
-	ActivityReject(ctx context.Context, token string) (*bool, error)
+	WorkflowStart(ctx context.Context, id string, name string, input *string) (Workflow, error)
+	WorkflowCancel(ctx context.Context, id string, runID *string) (*string, error)
+	WorkflowTerminate(ctx context.Context, id string, runID *string, reason *string, info *string) (*string, error)
+	ActivityPerform(ctx context.Context, domain *string, workflowID string, runID *string, activityID string, info *string) (*string, error)
+	ActivityFailed(ctx context.Context, domain *string, workflowID string, runID *string, activityID string, info *string) (*string, error)
 }
 type QueryResolver interface {
 	Domain(ctx context.Context, name *string) (*Domain, error)
@@ -128,29 +132,20 @@ func field_Mutation_workflowStart_args(rawArgs map[string]interface{}) (map[stri
 		}
 	}
 	args["name"] = arg1
-	var arg2 string
-	if tmp, ok := rawArgs["taskList"]; ok {
-		var err error
-		arg2, err = graphql.UnmarshalString(tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["taskList"] = arg2
-	var arg3 *string
+	var arg2 *string
 	if tmp, ok := rawArgs["input"]; ok {
 		var err error
 		var ptr1 string
 		if tmp != nil {
 			ptr1, err = graphql.UnmarshalString(tmp)
-			arg3 = &ptr1
+			arg2 = &ptr1
 		}
 
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg3
+	args["input"] = arg2
 	return args, nil
 
 }
@@ -166,36 +161,209 @@ func field_Mutation_workflowCancel_args(rawArgs map[string]interface{}) (map[str
 		}
 	}
 	args["id"] = arg0
-	return args, nil
-
-}
-
-func field_Mutation_activityApproval_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["token"]; ok {
+	var arg1 *string
+	if tmp, ok := rawArgs["runID"]; ok {
 		var err error
-		arg0, err = graphql.UnmarshalString(tmp)
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg1 = &ptr1
+		}
+
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["token"] = arg0
+	args["runID"] = arg1
 	return args, nil
 
 }
 
-func field_Mutation_activityReject_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func field_Mutation_workflowTerminate_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["token"]; ok {
+	if tmp, ok := rawArgs["id"]; ok {
 		var err error
-		arg0, err = graphql.UnmarshalString(tmp)
+		arg0, err = graphql.UnmarshalID(tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["token"] = arg0
+	args["id"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["runID"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg1 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["runID"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["reason"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg2 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["reason"] = arg2
+	var arg3 *string
+	if tmp, ok := rawArgs["info"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg3 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["info"] = arg3
+	return args, nil
+
+}
+
+func field_Mutation_activityPerform_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["domain"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg0 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["domain"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["workflowID"]; ok {
+		var err error
+		arg1, err = graphql.UnmarshalString(tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["workflowID"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["runID"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg2 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["runID"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["activityID"]; ok {
+		var err error
+		arg3, err = graphql.UnmarshalString(tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["activityID"] = arg3
+	var arg4 *string
+	if tmp, ok := rawArgs["info"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg4 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["info"] = arg4
+	return args, nil
+
+}
+
+func field_Mutation_activityFailed_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["domain"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg0 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["domain"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["workflowID"]; ok {
+		var err error
+		arg1, err = graphql.UnmarshalString(tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["workflowID"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["runID"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg2 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["runID"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["activityID"]; ok {
+		var err error
+		arg3, err = graphql.UnmarshalString(tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["activityID"] = arg3
+	var arg4 *string
+	if tmp, ok := rawArgs["info"]; ok {
+		var err error
+		var ptr1 string
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalString(tmp)
+			arg4 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["info"] = arg4
 	return args, nil
 
 }
@@ -570,6 +738,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Activity.Id(childComplexity), true
 
+	case "Activity.activityID":
+		if e.complexity.Activity.ActivityId == nil {
+			break
+		}
+
+		return e.complexity.Activity.ActivityId(childComplexity), true
+
+	case "Activity.runID":
+		if e.complexity.Activity.RunId == nil {
+			break
+		}
+
+		return e.complexity.Activity.RunId(childComplexity), true
+
 	case "Activity.token":
 		if e.complexity.Activity.Token == nil {
 			break
@@ -629,7 +811,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.WorkflowStart(childComplexity, args["id"].(string), args["name"].(string), args["taskList"].(string), args["input"].(*string)), true
+		return e.complexity.Mutation.WorkflowStart(childComplexity, args["id"].(string), args["name"].(string), args["input"].(*string)), true
 
 	case "Mutation.workflowCancel":
 		if e.complexity.Mutation.WorkflowCancel == nil {
@@ -641,31 +823,43 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.WorkflowCancel(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.WorkflowCancel(childComplexity, args["id"].(string), args["runID"].(*string)), true
 
-	case "Mutation.activityApproval":
-		if e.complexity.Mutation.ActivityApproval == nil {
+	case "Mutation.workflowTerminate":
+		if e.complexity.Mutation.WorkflowTerminate == nil {
 			break
 		}
 
-		args, err := field_Mutation_activityApproval_args(rawArgs)
+		args, err := field_Mutation_workflowTerminate_args(rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ActivityApproval(childComplexity, args["token"].(string)), true
+		return e.complexity.Mutation.WorkflowTerminate(childComplexity, args["id"].(string), args["runID"].(*string), args["reason"].(*string), args["info"].(*string)), true
 
-	case "Mutation.activityReject":
-		if e.complexity.Mutation.ActivityReject == nil {
+	case "Mutation.activityPerform":
+		if e.complexity.Mutation.ActivityPerform == nil {
 			break
 		}
 
-		args, err := field_Mutation_activityReject_args(rawArgs)
+		args, err := field_Mutation_activityPerform_args(rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ActivityReject(childComplexity, args["token"].(string)), true
+		return e.complexity.Mutation.ActivityPerform(childComplexity, args["domain"].(*string), args["workflowID"].(string), args["runID"].(*string), args["activityID"].(string), args["info"].(*string)), true
+
+	case "Mutation.activityFailed":
+		if e.complexity.Mutation.ActivityFailed == nil {
+			break
+		}
+
+		args, err := field_Mutation_activityFailed_args(rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ActivityFailed(childComplexity, args["domain"].(*string), args["workflowID"].(string), args["runID"].(*string), args["activityID"].(string), args["info"].(*string)), true
 
 	case "Query.Domain":
 		if e.complexity.Query.Domain == nil {
@@ -926,6 +1120,10 @@ func (ec *executionContext) _Activity(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
+		case "activityID":
+			out.Values[i] = ec._Activity_activityID(ctx, field, obj)
+		case "runID":
+			out.Values[i] = ec._Activity_runID(ctx, field, obj)
 		case "token":
 			out.Values[i] = ec._Activity_token(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -964,6 +1162,52 @@ func (ec *executionContext) _Activity_id(ctx context.Context, field graphql.Coll
 	res := resTmp.(string)
 	rctx.Result = res
 	return graphql.MarshalID(res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Activity_activityID(ctx context.Context, field graphql.CollectedField, obj *Activity) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Activity",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.ActivityID, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+
+	if res == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalString(*res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Activity_runID(ctx context.Context, field graphql.CollectedField, obj *Activity) graphql.Marshaler {
+	rctx := &graphql.ResolverContext{
+		Object: "Activity",
+		Args:   nil,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
+		return obj.RunID, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+
+	if res == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalString(*res)
 }
 
 // nolint: vetshadow
@@ -1219,13 +1463,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "workflowCancel":
 			out.Values[i] = ec._Mutation_workflowCancel(ctx, field)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		case "activityApproval":
-			out.Values[i] = ec._Mutation_activityApproval(ctx, field)
-		case "activityReject":
-			out.Values[i] = ec._Mutation_activityReject(ctx, field)
+		case "workflowTerminate":
+			out.Values[i] = ec._Mutation_workflowTerminate(ctx, field)
+		case "activityPerform":
+			out.Values[i] = ec._Mutation_activityPerform(ctx, field)
+		case "activityFailed":
+			out.Values[i] = ec._Mutation_activityFailed(ctx, field)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -1252,7 +1495,7 @@ func (ec *executionContext) _Mutation_workflowStart(ctx context.Context, field g
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
-		return ec.resolvers.Mutation().WorkflowStart(ctx, args["id"].(string), args["name"].(string), args["taskList"].(string), args["input"].(*string))
+		return ec.resolvers.Mutation().WorkflowStart(ctx, args["id"].(string), args["name"].(string), args["input"].(*string))
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1281,24 +1524,24 @@ func (ec *executionContext) _Mutation_workflowCancel(ctx context.Context, field 
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
-		return ec.resolvers.Mutation().WorkflowCancel(ctx, args["id"].(string))
+		return ec.resolvers.Mutation().WorkflowCancel(ctx, args["id"].(string), args["runID"].(*string))
 	})
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(Workflow)
+	res := resTmp.(*string)
 	rctx.Result = res
 
-	return ec._Workflow(ctx, field.Selections, &res)
+	if res == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalString(*res)
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Mutation_activityApproval(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+func (ec *executionContext) _Mutation_workflowTerminate(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := field_Mutation_activityApproval_args(rawArgs)
+	args, err := field_Mutation_workflowTerminate_args(rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -1310,24 +1553,24 @@ func (ec *executionContext) _Mutation_activityApproval(ctx context.Context, fiel
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
-		return ec.resolvers.Mutation().ActivityApproval(ctx, args["token"].(string))
+		return ec.resolvers.Mutation().WorkflowTerminate(ctx, args["id"].(string), args["runID"].(*string), args["reason"].(*string), args["info"].(*string))
 	})
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*bool)
+	res := resTmp.(*string)
 	rctx.Result = res
 
 	if res == nil {
 		return graphql.Null
 	}
-	return graphql.MarshalBoolean(*res)
+	return graphql.MarshalString(*res)
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Mutation_activityReject(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+func (ec *executionContext) _Mutation_activityPerform(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := field_Mutation_activityReject_args(rawArgs)
+	args, err := field_Mutation_activityPerform_args(rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -1339,18 +1582,47 @@ func (ec *executionContext) _Mutation_activityReject(ctx context.Context, field 
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
-		return ec.resolvers.Mutation().ActivityReject(ctx, args["token"].(string))
+		return ec.resolvers.Mutation().ActivityPerform(ctx, args["domain"].(*string), args["workflowID"].(string), args["runID"].(*string), args["activityID"].(string), args["info"].(*string))
 	})
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*bool)
+	res := resTmp.(*string)
 	rctx.Result = res
 
 	if res == nil {
 		return graphql.Null
 	}
-	return graphql.MarshalBoolean(*res)
+	return graphql.MarshalString(*res)
+}
+
+// nolint: vetshadow
+func (ec *executionContext) _Mutation_activityFailed(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := field_Mutation_activityFailed_args(rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx := &graphql.ResolverContext{
+		Object: "Mutation",
+		Args:   args,
+		Field:  field,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Mutation().ActivityFailed(ctx, args["domain"].(*string), args["workflowID"].(string), args["runID"].(*string), args["activityID"].(string), args["info"].(*string))
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+
+	if res == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalString(*res)
 }
 
 var queryImplementors = []string{"Query"}
@@ -3506,6 +3778,8 @@ type Workflow {
 
 type Activity{
 	id: ID!	
+	activityID: String
+	runID: String
 	token: String!
 	isApproved: Boolean
 }
@@ -3519,10 +3793,11 @@ type Query {
 }
 
 type Mutation {
-	workflowStart(id: ID!, name: String!, taskList: String!, input: String): Workflow!
-	workflowCancel(id: ID!): Workflow!
-	activityApproval(token: String!): Boolean
-	activityReject(token: String!): Boolean
+	workflowStart(id: ID!, name: String!, input: String): Workflow!
+	workflowCancel(id: ID!, runID: String): String
+	workflowTerminate(id: ID!, runID: String, reason: String, info: String): String
+	activityPerform(domain: String, workflowID: String!, runID: String, activityID: String!, info: String): String	
+	activityFailed(domain: String, workflowID: String!, runID: String, activityID: String!, info: String): String	
 }
 
 type Subscription {

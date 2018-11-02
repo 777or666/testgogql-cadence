@@ -7,9 +7,11 @@ import (
 )
 
 type Activity struct {
-	ID         string `json:"id"`
-	Token      string `json:"token"`
-	IsApproved *bool  `json:"isApproved"`
+	ID         string  `json:"id"`
+	ActivityID *string `json:"activityID"`
+	RunID      *string `json:"runID"`
+	Token      string  `json:"token"`
+	IsApproved *bool   `json:"isApproved"`
 }
 
 type Domain struct {

@@ -27,7 +27,7 @@ const (
 )
 
 type Configuration struct {
-	DomainId           string `yaml:"domainId"`
+	//DomainId           string `yaml:"domainId"`
 	UrlRestService     string `yaml:"urlrestservice"`
 	ApplicationName    string `yaml:"appname"`
 	PrefixWorkflowFunc string `yaml:"prefixworkflowfunc"`
@@ -56,7 +56,7 @@ func main() {
 				Config.UrlRestService,
 				Config.ApplicationName,
 				Config.PrefixWorkflowFunc,
-				Config.DomainId,
+				//Config.DomainId,
 			)),
 		handler.ResolverMiddleware(gqlopentracing.ResolverMiddleware()),
 		handler.RequestMiddleware(gqlopentracing.RequestMiddleware()),

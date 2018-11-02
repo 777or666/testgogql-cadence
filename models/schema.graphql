@@ -25,6 +25,8 @@ type Workflow {
 
 type Activity{
 	id: ID!	
+	activityID: String
+	runID: String
 	token: String!
 	isApproved: Boolean
 }
@@ -38,10 +40,11 @@ type Query {
 }
 
 type Mutation {
-	workflowStart(id: ID!, name: String!, taskList: String!, input: String): Workflow!
-	workflowCancel(id: ID!): Workflow!
-	activityApproval(token: String!): Boolean
-	activityReject(token: String!): Boolean
+	workflowStart(id: ID!, name: String!, input: String): Workflow!
+	workflowCancel(id: ID!, runID: String): String
+	workflowTerminate(id: ID!, runID: String, reason: String, info: String): String
+	activityPerform(domain: String, workflowID: String!, runID: String, activityID: String!, info: String): String	
+	activityFailed(domain: String, workflowID: String!, runID: String, activityID: String!, info: String): String	
 }
 
 type Subscription {
