@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/777or666/testgogql-cadence/axibpmActivities"
-	"github.com/777or666/testgogql-cadence/axibpmWorkflows"
+	//"github.com/777or666/testgogql-cadence/axibpmActivities"
+	//"github.com/777or666/testgogql-cadence/axibpmWorkflows"
 
 	"github.com/777or666/testgogql-cadence/helpers"
 
@@ -18,14 +18,14 @@ import (
 	"github.com/go-resty/resty"
 	//"github.com/pborman/uuid"
 	"go.uber.org/cadence"
-	"go.uber.org/cadence/activity"
+	//"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/client"
-	"go.uber.org/cadence/worker"
-	"go.uber.org/cadence/workflow"
+	//"go.uber.org/cadence/worker"
+	//"go.uber.org/cadence/workflow"
 )
 
 var UrlRestService string
-var h helpers.SampleHelper
+var h *helpers.SampleHelper
 var workflowClient client.Client
 var ApplicationName string //ВСЕГДА должно совпадать в воркере и всех его воркфлоу
 var PrefixWorkflowFunc string
@@ -48,47 +48,90 @@ func (r *resolver) Subscription() SubscriptionResolver {
 
 //****************************************
 // Регистрируем все воркфлоу и активности
-func init() {
-	workflow.Register(axibpmWorkflows.TestWorkflow)
-	activity.Register(axibpmActivities.TestActivity)
-}
-
+//func init() {
+//	workflow.Register(axibpmWorkflows.TestWorkflow)
+//	activity.Register(axibpmActivities.TestActivity)
+//}
 //****************************************
 
-func New(urlRestService string, applicationName string, prefixworkflowfunc string) Config {
+func New(urlRestService string, applicationName string, prefixworkflowfunc string, hw *helpers.SampleHelper) Config {
 	//, domainId string
 	UrlRestService = urlRestService
 	ApplicationName = applicationName
 	PrefixWorkflowFunc = prefixworkflowfunc
 	//DomainId = domainId
 
-	h.SetupServiceConfig()
+	h = hw
+
+	//	h.SetupServiceConfig()
 	var err error
 	workflowClient, err = h.Builder.BuildCadenceClient()
+
 	if err != nil {
 		log.Println("ОШИБКА при BuildCadenceClient: " + err.Error())
 		panic(err)
 	}
-	startWorkers(&h)
+	//	startWorkers(&h)
 
 	return Config{Resolvers: &resolver{}}
 }
 
-// Запускаем воркера
-func startWorkers(h *helpers.SampleHelper) {
-	// Конфигурация воркера
-	workerOptions := worker.Options{
-		MetricsScope: h.Scope,
-		Logger:       h.Logger,
-	}
-	h.StartWorkers(h.Config.DomainName, ApplicationName, workerOptions)
-}
+//// Запускаем воркера
+//func startWorkers(h *helpers.SampleHelper) {
+//	// Конфигурация воркера
+//	workerOptions := worker.Options{
+//		MetricsScope: h.Scope,
+//		Logger:       h.Logger,
+//	}
+//	h.StartWorkers(h.Config.DomainName, ApplicationName, workerOptions)
+//}
 
-//Запуск задачи
-//id -идентификатор
-//name - программное наименование функции воркфлоу с пакетом (пример, "TestWorkflow")
-//taskList - наименование типа списка задач !!! ДОЛЖНО СОВПАДАТЬ С ApplicationName!!!
-func startWorkflow(h *helpers.SampleHelper, id string, name string) (string, string) {
+////Запуск задачи
+////id -идентификатор
+////name - программное наименование функции воркфлоу с пакетом (пример, "TestWorkflow")
+////taskList - наименование типа списка задач !!! ДОЛЖНО СОВПАДАТЬ С ApplicationName!!!
+//func startWorkflow(h *helpers.SampleHelper, id string, name string) (string, string) {
+//	workflowOptions := client.StartWorkflowOptions{
+//		ID:                              id,
+//		TaskList:                        ApplicationName,
+//		ExecutionStartToCloseTimeout:    2 * time.Minute,
+//		DecisionTaskStartToCloseTimeout: 2 * time.Minute,
+//		WorkflowIDReusePolicy:           2, // см. ниже
+//		// 0
+//		// WorkflowIDReusePolicyAllowDuplicateFailedOnly позволяет запустить выполнение рабочего процесса
+//		// когда рабочий процесс не запущен, а состояние завершения последнего выполнения находится в
+//		// [завершено, отменено, время ожидания, не выполнено].
+//		// WorkflowIDReusePolicyAllowDuplicateFailedOnly WorkflowIDReusePolicy = iota
+//		// 1
+//		// WorkflowIDReusePolicyAllowDuplicate позволяет запустить выполнение рабочего процесса, используя
+//		// тот же идентификатор рабочего процесса, когда рабочий процесс не запущен.
+//		//WorkflowIDReusePolicyAllowDuplicate
+//		// 2
+//		// WorkflowIDReusePolicyRejectDuplicate не позволяет запустить выполнение рабочего процесса с использованием того же идентификатора рабочего процесса вообще
+//		//WorkflowIDReusePolicyRejectDuplicate
+//	}
+
+//	//log.Println("startWorkflow! " + name)
+
+//	fullname := PrefixWorkflowFunc + name
+
+//	wfid, rid := h.StartWorkflow(workflowOptions, fullname, id)
+
+//	return wfid, rid
+//}
+
+type mutationResolver struct{ *resolver }
+
+func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name string, input *string) (Workflow, error) {
+	//r.mu.Lock()
+
+	//token := new(string)
+
+	//Запускаем задачу
+	//wfId, wfRunId := startWorkflow(&h, id, name)
+
+	//r.mu.Unlock()
+
 	workflowOptions := client.StartWorkflowOptions{
 		ID:                              id,
 		TaskList:                        ApplicationName,
@@ -113,22 +156,7 @@ func startWorkflow(h *helpers.SampleHelper, id string, name string) (string, str
 
 	fullname := PrefixWorkflowFunc + name
 
-	wfid, rid := h.StartWorkflow(workflowOptions, fullname, id)
-
-	return wfid, rid
-}
-
-type mutationResolver struct{ *resolver }
-
-func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name string, input *string) (Workflow, error) {
-	//r.mu.Lock()
-
-	//token := new(string)
-
-	//Запускаем задачу
-	wfId, wfRunId := startWorkflow(&h, id, name)
-
-	//r.mu.Unlock()
+	wfId, wfRunId := h.StartWorkflow(workflowOptions, fullname, id)
 
 	cteatedAt := time.Now()
 

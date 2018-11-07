@@ -20,6 +20,16 @@ import (
 	"sourcegraph.com/sourcegraph/appdash"
 	appdashtracer "sourcegraph.com/sourcegraph/appdash/opentracing"
 	"sourcegraph.com/sourcegraph/appdash/traceapp"
+
+	"github.com/777or666/testgogql-cadence/helpers"
+
+	"go.uber.org/cadence/worker"
+
+	"github.com/777or666/testgogql-cadence/axibpmActivities"
+	"github.com/777or666/testgogql-cadence/axibpmWorkflows"
+
+	"go.uber.org/cadence/activity"
+	"go.uber.org/cadence/workflow"
 )
 
 const (
@@ -33,10 +43,20 @@ type Configuration struct {
 	PrefixWorkflowFunc string `yaml:"prefixworkflowfunc"`
 }
 
+//****************************************
+// Регистрируем все воркфлоу и активности
+func init() {
+	workflow.Register(axibpmWorkflows.TestWorkflow)
+	activity.Register(axibpmActivities.TestActivity)
+	activity.Register(axibpmActivities.EmailSenderActivity)
+}
+
+//****************************************
+
 func main() {
 	startAppdashServer()
 
-	// Чтение файла конфигурации
+	//Чтение файла конфигурации******
 	configData, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		panic(fmt.Sprintf("Ошибка чтения файла: %v, Error: %v", configFile, err))
@@ -47,7 +67,16 @@ func main() {
 	if err := yaml.Unmarshal(configData, &Config); err != nil {
 		panic(fmt.Sprintf("Ошибка инициализации конфигурации: %v", err))
 	}
+	//*******************************
 
+	//Запуск воркера бизнес-процессов***
+	var h helpers.SampleHelper
+	h.SetupServiceConfig()
+
+	startWorkers(&h, Config.ApplicationName)
+	//**********************************
+
+	//Запуск системы graphql********
 	router := mux.NewRouter()
 	router.HandleFunc("/", handler.Playground("AXI-BPM CADENCE", "/query"))
 	router.HandleFunc("/query", handler.GraphQL(
@@ -56,6 +85,7 @@ func main() {
 				Config.UrlRestService,
 				Config.ApplicationName,
 				Config.PrefixWorkflowFunc,
+				&h,
 				//Config.DomainId,
 			)),
 		handler.ResolverMiddleware(gqlopentracing.ResolverMiddleware()),
@@ -75,6 +105,7 @@ func main() {
 	handler := c.Handler(router)
 
 	log.Fatal(http.ListenAndServe(":8085", handler))
+	//**************************************
 }
 
 func startAppdashServer() opentracing.Tracer {
@@ -107,4 +138,25 @@ func startAppdashServer() opentracing.Tracer {
 
 	log.Println("Appdash web UI running on HTTP :8700")
 	return tracer
+}
+
+// Запускаем воркера
+func startWorkers(h *helpers.SampleHelper, ApplicationName string) {
+
+	//h.SetupServiceConfig()
+	//	var err error
+	//	workflowClient, err = h.Builder.BuildCadenceClient()
+
+	//	if err != nil {
+	//		log.Println("ОШИБКА при BuildCadenceClient: " + err.Error())
+	//		panic(err)
+	//	}
+	//startWorkers(&h)
+
+	// Конфигурация воркера
+	workerOptions := worker.Options{
+		MetricsScope: h.Scope,
+		Logger:       h.Logger,
+	}
+	h.StartWorkers(h.Config.DomainName, ApplicationName, workerOptions)
 }
