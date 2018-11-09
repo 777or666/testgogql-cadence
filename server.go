@@ -37,13 +37,19 @@ const (
 )
 
 type Configuration struct {
-	//DomainId           string `yaml:"domainId"`
 	UrlRestService     string `yaml:"urlrestservice"`
 	ApplicationName    string `yaml:"appname"`
 	PrefixWorkflowFunc string `yaml:"prefixworkflowfunc"`
+	EmailIdentity      string `yaml:"emailidentity"`
+	EmailFrom          string `yaml:"emailfrom"`
+	EmailUserName      string `yaml:"emailusername"`
+	EmailPassword      string `yaml:"emailpassword"`
+	EmailHost          string `yaml:"emailhost"`
+	EmailPort          string `yaml:"emailport"`
 }
 
 //****************************************
+
 // Регистрируем все воркфлоу и активности
 func init() {
 	workflow.Register(axibpmWorkflows.TestWorkflow)
@@ -56,7 +62,7 @@ func init() {
 func main() {
 	startAppdashServer()
 
-	//Чтение файла конфигурации******
+	//Чтение файла конфигурации
 	configData, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		panic(fmt.Sprintf("Ошибка чтения файла: %v, Error: %v", configFile, err))
@@ -69,14 +75,23 @@ func main() {
 	}
 	//*******************************
 
-	//Запуск воркера бизнес-процессов***
+	emailconf := helpers.EmailConfig{
+		Emailidentity: Config.EmailIdentity,
+		Emailfrom:     Config.EmailFrom,
+		Emailusername: Config.EmailUserName,
+		Emailpassword: Config.EmailPassword,
+		Emailhost:     Config.EmailHost,
+		Emailport:     Config.EmailPort,
+	}
+
+	//Запуск воркера бизнес-процессов
 	var h helpers.SampleHelper
 	h.SetupServiceConfig()
 
 	startWorkers(&h, Config.ApplicationName)
 	//**********************************
 
-	//Запуск системы graphql********
+	//Запуск системы graphql
 	router := mux.NewRouter()
 	router.HandleFunc("/", handler.Playground("AXI-BPM CADENCE", "/query"))
 	router.HandleFunc("/query", handler.GraphQL(
@@ -85,8 +100,8 @@ func main() {
 				Config.UrlRestService,
 				Config.ApplicationName,
 				Config.PrefixWorkflowFunc,
+				&emailconf,
 				&h,
-				//Config.DomainId,
 			)),
 		handler.ResolverMiddleware(gqlopentracing.ResolverMiddleware()),
 		handler.RequestMiddleware(gqlopentracing.RequestMiddleware()),
@@ -140,18 +155,8 @@ func startAppdashServer() opentracing.Tracer {
 	return tracer
 }
 
-// Запускаем воркера
+// Запуск воркера
 func startWorkers(h *helpers.SampleHelper, ApplicationName string) {
-
-	//h.SetupServiceConfig()
-	//	var err error
-	//	workflowClient, err = h.Builder.BuildCadenceClient()
-
-	//	if err != nil {
-	//		log.Println("ОШИБКА при BuildCadenceClient: " + err.Error())
-	//		panic(err)
-	//	}
-	//startWorkers(&h)
 
 	// Конфигурация воркера
 	workerOptions := worker.Options{

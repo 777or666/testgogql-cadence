@@ -1,7 +1,5 @@
 # config
 domain: "axibpm-domain"
-# domainId не удалось вытащить из сервиса cadence-web поэтому задаем жестко
-# domainId: "9d88d286-53e5-452d-93db-4ba8613f229f"
 service: "cadence-frontend"
 host: "10.174.18.121:7933"
 # host: "195.209.35.28:7933"
@@ -10,4 +8,12 @@ host: "10.174.18.121:7933"
 urlrestservice: "http://10.174.18.121:8088"
 # urlrestservice: "http://195.209.35.28:8088"
 appname: "AXI-BPM"
+# префикс полного наименования методов бизнес-процессов
 prefixworkflowfunc: "github.com/777or666/testgogql-cadence/axibpmWorkflows."
+# e-mail рассылка
+emailidentity: ""
+emailfrom: "m.kravetz@axitech.ru"
+emailusername: "m.kravetz@axitech.ru"
+emailpassword: "!1"
+emailhost: "mail.axitech.ru"
+emailport: "25"

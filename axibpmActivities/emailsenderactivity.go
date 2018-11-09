@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/smtp"
 
+	"github.com/777or666/testgogql-cadence/helpers"
 	"go.uber.org/cadence/activity"
 )
 
@@ -19,33 +20,26 @@ func (a unencryptedAuth) Start(server *smtp.ServerInfo) (string, []byte, error) 
 	return a.Auth.Start(&s)
 }
 
-func EmailSenderActivity(ctx context.Context, addressees []string) (string, error) {
+func EmailSenderActivity(ctx context.Context, addressees []string, emailbody string, emailconfig *helpers.EmailConfig) (string, error) {
 	logger := activity.GetLogger(ctx)
 
-	logger.Info("axibpmActivities: EmailSenderActivity начинаю отправку е-маил")
-
-	//	auth := smtp.PlainAuth(
-	//		"",
-	//		"belka@axitech.ru",
-	//		"778523",
-	//		"mail.axitech.ru",
-	//	)
+	logger.Info("axibpmActivities: EmailSenderActivity начинаю отправку от имени")
 
 	auth := unencryptedAuth{
 		smtp.PlainAuth(
-			"",
-			"m.kravetz@axitech.ru",
-			"!1",
-			"mail.axitech.ru",
+			emailconfig.Emailidentity,
+			emailconfig.Emailusername,
+			emailconfig.Emailpassword,
+			emailconfig.Emailhost,
 		),
 	}
 
 	err := smtp.SendMail(
-		"mail.axitech.ru:25",
+		emailconfig.Emailhost+":"+emailconfig.Emailport,
 		auth,
-		"m.kravetz@axitech.ru",
-		[]string{"kravetsmihail@mail.ru"},
-		[]byte("AXI-BPM. ТЕСТВОЕ ПИСЬМО"),
+		emailconfig.Emailfrom,
+		addressees,
+		[]byte(emailbody),
 	)
 	if err != nil {
 		logger.Info(err.Error())

@@ -40,7 +40,7 @@ type Query {
 }
 
 type Mutation {
-	workflowStart(id: ID!, name: String!, input: String): Workflow!
+	workflowStart(id: ID!, name: String!, input: String, ExecutionStartToCloseTimeout: Int, DecisionTaskStartToCloseTimeout: Int, EmailResponsible: [String], EmailParticipants: [String]): Workflow!
 	workflowCancel(id: ID!, runID: String): String
 	workflowTerminate(id: ID!, runID: String, reason: String, info: String): String
 	activityPerform(domain: String, workflowID: String!, runID: String, activityID: String!, info: String): String	
