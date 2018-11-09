@@ -25,7 +25,9 @@ var ApplicationName string //ВСЕГДА должно совпадать в в�
 var PrefixWorkflowFunc string
 var EmailConfiguration *helpers.EmailConfig
 
-type resolver struct{
+//var DomainId string //domainId не удалось вытащить
+
+type resolver struct {
 	mu sync.Mutex // nolint: structcheck
 }
 
@@ -38,6 +40,14 @@ func (r *resolver) Query() QueryResolver {
 func (r *resolver) Subscription() SubscriptionResolver {
 	return &subscriptionResolver{r}
 }
+
+//****************************************
+// Регистрируем все воркфлоу и активности
+//func init() {
+//	workflow.Register(axibpmWorkflows.TestWorkflow)
+//	activity.Register(axibpmActivities.TestActivity)
+//}
+//****************************************
 
 func New(urlRestService string, applicationName string, prefixworkflowfunc string, emailconfig *helpers.EmailConfig, hw *helpers.SampleHelper) Config {
 	UrlRestService = urlRestService
@@ -62,7 +72,7 @@ type mutationResolver struct{ *resolver }
 //Запуск бизнес-процесса
 //id -идентификатор
 //name - программное наименование функции воркфлоу с пакетом (пример, "TestWorkflow")
-func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name string, input *string, ExecutionStartToCloseTimeout *int, DecisionTaskStartToCloseTimeout *int, EmailResponsible []*string, EmailParticipants []*string) (Workflow, error) {
+func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name string, input *string) (Workflow, error) {
 	//r.mu.Lock()
 
 	//token := new(string)
@@ -128,8 +138,8 @@ func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name st
 
 	return wrf, nil //nil заменить на err
 }
-
 func (r *mutationResolver) WorkflowCancel(ctx context.Context, id string, runID *string) (*string, error) {
+
 	result := "Бизнес-процесс отменен"
 
 	err := workflowClient.CancelWorkflow(context.Background(), id, *runID)
@@ -141,7 +151,6 @@ func (r *mutationResolver) WorkflowCancel(ctx context.Context, id string, runID 
 
 	return &result, nil
 }
-
 func (r *mutationResolver) WorkflowTerminate(ctx context.Context, id string, runID *string, reason *string, info *string) (*string, error) {
 	result := "Бизнес-процесс прерван"
 	details := *info
@@ -156,7 +165,7 @@ func (r *mutationResolver) WorkflowTerminate(ctx context.Context, id string, run
 	return &result, nil
 }
 func (r *mutationResolver) ActivityPerform(ctx context.Context, domain *string, workflowID string, runID *string, activityID string, info *string) (*string, error) {
-	
+
 	result := "Операция выполнена"
 
 	err := workflowClient.CompleteActivityByID(context.Background(), *domain, workflowID, *runID, activityID, *info, nil)
@@ -170,7 +179,7 @@ func (r *mutationResolver) ActivityPerform(ctx context.Context, domain *string, 
 	return &result, nil
 }
 func (r *mutationResolver) ActivityFailed(ctx context.Context, domain *string, workflowID string, runID *string, activityID string, info *string) (*string, error) {
-	
+
 	result := "Операция отменена"
 
 	//добавить детали - причину отмены активности и кто ее отменил

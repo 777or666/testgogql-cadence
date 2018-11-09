@@ -57,7 +57,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		WorkflowStart     func(childComplexity int, id string, name string, input *string) int
+		WorkflowStart     func(childComplexity int, id string, name string, input *string, ExecutionStartToCloseTimeout *int, DecisionTaskStartToCloseTimeout *int, EmailResponsible []*string, EmailParticipants []*string) int
 		WorkflowCancel    func(childComplexity int, id string, runID *string) int
 		WorkflowTerminate func(childComplexity int, id string, runID *string, reason *string, info *string) int
 		ActivityPerform   func(childComplexity int, domain *string, workflowID string, runID *string, activityID string, info *string) int
@@ -95,7 +95,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	WorkflowStart(ctx context.Context, id string, name string, input *string) (Workflow, error)
+	WorkflowStart(ctx context.Context, id string, name string, input *string, ExecutionStartToCloseTimeout *int, DecisionTaskStartToCloseTimeout *int, EmailResponsible []*string, EmailParticipants []*string) (Workflow, error)
 	WorkflowCancel(ctx context.Context, id string, runID *string) (*string, error)
 	WorkflowTerminate(ctx context.Context, id string, runID *string, reason *string, info *string) (*string, error)
 	ActivityPerform(ctx context.Context, domain *string, workflowID string, runID *string, activityID string, info *string) (*string, error)
@@ -146,6 +146,82 @@ func field_Mutation_workflowStart_args(rawArgs map[string]interface{}) (map[stri
 		}
 	}
 	args["input"] = arg2
+	var arg3 *int
+	if tmp, ok := rawArgs["ExecutionStartToCloseTimeout"]; ok {
+		var err error
+		var ptr1 int
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalInt(tmp)
+			arg3 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["ExecutionStartToCloseTimeout"] = arg3
+	var arg4 *int
+	if tmp, ok := rawArgs["DecisionTaskStartToCloseTimeout"]; ok {
+		var err error
+		var ptr1 int
+		if tmp != nil {
+			ptr1, err = graphql.UnmarshalInt(tmp)
+			arg4 = &ptr1
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["DecisionTaskStartToCloseTimeout"] = arg4
+	var arg5 []*string
+	if tmp, ok := rawArgs["EmailResponsible"]; ok {
+		var err error
+		var rawIf1 []interface{}
+		if tmp != nil {
+			if tmp1, ok := tmp.([]interface{}); ok {
+				rawIf1 = tmp1
+			} else {
+				rawIf1 = []interface{}{tmp}
+			}
+		}
+		arg5 = make([]*string, len(rawIf1))
+		for idx1 := range rawIf1 {
+			var ptr2 string
+			if rawIf1[idx1] != nil {
+				ptr2, err = graphql.UnmarshalString(rawIf1[idx1])
+				arg5[idx1] = &ptr2
+			}
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["EmailResponsible"] = arg5
+	var arg6 []*string
+	if tmp, ok := rawArgs["EmailParticipants"]; ok {
+		var err error
+		var rawIf1 []interface{}
+		if tmp != nil {
+			if tmp1, ok := tmp.([]interface{}); ok {
+				rawIf1 = tmp1
+			} else {
+				rawIf1 = []interface{}{tmp}
+			}
+		}
+		arg6 = make([]*string, len(rawIf1))
+		for idx1 := range rawIf1 {
+			var ptr2 string
+			if rawIf1[idx1] != nil {
+				ptr2, err = graphql.UnmarshalString(rawIf1[idx1])
+				arg6[idx1] = &ptr2
+			}
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["EmailParticipants"] = arg6
 	return args, nil
 
 }
@@ -811,7 +887,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.WorkflowStart(childComplexity, args["id"].(string), args["name"].(string), args["input"].(*string)), true
+		return e.complexity.Mutation.WorkflowStart(childComplexity, args["id"].(string), args["name"].(string), args["input"].(*string), args["ExecutionStartToCloseTimeout"].(*int), args["DecisionTaskStartToCloseTimeout"].(*int), args["EmailResponsible"].([]*string), args["EmailParticipants"].([]*string)), true
 
 	case "Mutation.workflowCancel":
 		if e.complexity.Mutation.WorkflowCancel == nil {
@@ -1495,7 +1571,7 @@ func (ec *executionContext) _Mutation_workflowStart(ctx context.Context, field g
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
-		return ec.resolvers.Mutation().WorkflowStart(ctx, args["id"].(string), args["name"].(string), args["input"].(*string))
+		return ec.resolvers.Mutation().WorkflowStart(ctx, args["id"].(string), args["name"].(string), args["input"].(*string), args["ExecutionStartToCloseTimeout"].(*int), args["DecisionTaskStartToCloseTimeout"].(*int), args["EmailResponsible"].([]*string), args["EmailParticipants"].([]*string))
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -3793,7 +3869,7 @@ type Query {
 }
 
 type Mutation {
-	workflowStart(id: ID!, name: String!, input: String): Workflow!
+	workflowStart(id: ID!, name: String!, input: String, ExecutionStartToCloseTimeout: Int, DecisionTaskStartToCloseTimeout: Int, EmailResponsible: [String], EmailParticipants: [String]): Workflow!
 	workflowCancel(id: ID!, runID: String): String
 	workflowTerminate(id: ID!, runID: String, reason: String, info: String): String
 	activityPerform(domain: String, workflowID: String!, runID: String, activityID: String!, info: String): String	
