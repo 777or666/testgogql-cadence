@@ -25,7 +25,7 @@ var ApplicationName string //ВСЕГДА должно совпадать в в�
 var PrefixWorkflowFunc string
 var EmailConfiguration *helpers.EmailConfig
 
-type resolver struct{
+type resolver struct {
 	mu sync.Mutex // nolint: structcheck
 }
 
@@ -98,7 +98,7 @@ func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name st
 
 	fullname := PrefixWorkflowFunc + name
 
-	wfId, wfRunId := h.StartWorkflow(workflowOptions, fullname, id, EmailConfiguration)
+	wfId, wfRunId := h.StartWorkflow(workflowOptions, fullname, id, EmailConfiguration, EmailResponsible, EmailParticipants)
 
 	cteatedAt := time.Now()
 
@@ -156,8 +156,10 @@ func (r *mutationResolver) WorkflowTerminate(ctx context.Context, id string, run
 	return &result, nil
 }
 func (r *mutationResolver) ActivityPerform(ctx context.Context, domain *string, workflowID string, runID *string, activityID string, info *string) (*string, error) {
-	
+
 	result := "Операция выполнена"
+
+	log.Println("ActivityPerform! Старт")
 
 	err := workflowClient.CompleteActivityByID(context.Background(), *domain, workflowID, *runID, activityID, *info, nil)
 	if err != nil {
@@ -170,7 +172,7 @@ func (r *mutationResolver) ActivityPerform(ctx context.Context, domain *string, 
 	return &result, nil
 }
 func (r *mutationResolver) ActivityFailed(ctx context.Context, domain *string, workflowID string, runID *string, activityID string, info *string) (*string, error) {
-	
+
 	result := "Операция отменена"
 
 	//добавить детали - причину отмены активности и кто ее отменил

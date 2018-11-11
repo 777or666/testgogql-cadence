@@ -32,7 +32,7 @@ const (
 //const WorkflowName = "Согласование ТКП"
 
 // Выполняем воркфлоу
-func TestWorkflow(ctx workflow.Context, id string, emailconfig *helpers.EmailConfig) (result string, err error) {
+func TestWorkflow(ctx workflow.Context, id string, emailconfig *helpers.EmailConfig, EmailResponsible []*string, EmailParticipants []*string) (result string, err error) {
 
 	//Чтение файла конфигурации
 	configData, err := ioutil.ReadFile(configfileTestworkflow)
@@ -64,7 +64,14 @@ func TestWorkflow(ctx workflow.Context, id string, emailconfig *helpers.EmailCon
 	subject := "Subject: " + "Тема 1" + "\n"
 	emailbody := subject + mime + "\n" + "Старт тестового процесса\n"
 
-	addressees := []string{"kravetsmihail@mail.ru", "kravetsmihail@yandex.ru"}
+	//addressees := []string{"kravetsmihail@mail.ru", "kravetsmihail@yandex.ru"}
+
+	var addressees []string
+	//x := make([]string, len(EmailParticipants))
+
+	for _, value := range EmailParticipants {
+		addressees = append(addressees, *value)
+	}
 
 	logger.Info("Start EmailSenderActivity")
 
