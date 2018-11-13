@@ -25,13 +25,21 @@ func EmailSenderActivity(ctx context.Context, addressees []string, emailbody str
 
 	logger.Info("axibpmActivities: EmailSenderActivity начинаю отправку от имени")
 
-	auth := //unencryptedAuth{
+	// Google
+	//	auth := smtp.PlainAuth(
+	//			emailconfig.Emailidentity,
+	//			emailconfig.Emailusername,
+	//			emailconfig.Emailpassword,
+	//			emailconfig.Emailhost)
+
+	// АКСИТЕХ
+	auth := unencryptedAuth{
 		smtp.PlainAuth(
 			emailconfig.Emailidentity,
 			emailconfig.Emailusername,
 			emailconfig.Emailpassword,
-			emailconfig.Emailhost) //,
-	//}
+			emailconfig.Emailhost),
+	}
 
 	err := smtp.SendMail(
 		emailconfig.Emailhost+":"+emailconfig.Emailport,

@@ -60,8 +60,12 @@ func New(urlRestService string, applicationName string, prefixworkflowfunc strin
 type mutationResolver struct{ *resolver }
 
 //Запуск бизнес-процесса
-//id -идентификатор
-//name - программное наименование функции воркфлоу с пакетом (пример, "TestWorkflow")
+//id - идентификатор процесса
+//name - программное наименование функции воркфлоу (пример, "TestWorkflow")
+//ExecutionStartToCloseTimeout - тайм-айт выполнения рабочего процесса
+//DecisionTaskStartToCloseTimeout - тайм-аут для обработки задачи решения с момента, когда воркер вытащил эту задачу
+//EmailResponsible - e-mail ответственных
+//EmailParticipants - e-mail остальных участников процесса
 func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name string, input *string, ExecutionStartToCloseTimeout *int, DecisionTaskStartToCloseTimeout *int, EmailResponsible []*string, EmailParticipants []*string) (Workflow, error) {
 	//r.mu.Lock()
 
@@ -74,11 +78,11 @@ func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name st
 	workflowOptions := client.StartWorkflowOptions{
 		ID:       id,
 		TaskList: ApplicationName,
-		//ExecutionStartToCloseTimeout - время ожидания выполнения рабочего процесса
-		ExecutionStartToCloseTimeout: 7200 * time.Minute,
+		//ExecutionStartToCloseTimeout - тайм-аут выполнения рабочего процесса
+		ExecutionStartToCloseTimeout: time.Duration(*ExecutionStartToCloseTimeout) * time.Minute,
 		//DecisionTaskTartToCloseTimeout - тайм-аут для обработки задачи решения с момента, когда рабочий
 		// вытащил эту задачу. Если задача решения потеряна, она повторится после этого таймаута.
-		DecisionTaskStartToCloseTimeout: 5 * time.Minute,
+		DecisionTaskStartToCloseTimeout: time.Duration(*DecisionTaskStartToCloseTimeout) * time.Minute,
 		WorkflowIDReusePolicy:           2, // см. ниже
 		// 0
 		// WorkflowIDReusePolicyAllowDuplicateFailedOnly позволяет запустить выполнение рабочего процесса

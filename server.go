@@ -12,7 +12,7 @@ import (
 
 	"github.com/777or666/testgogql-cadence/models"
 	"github.com/99designs/gqlgen/handler"
-	gqlopentracing "github.com/99designs/gqlgen/opentracing"
+	//gqlopentracing "github.com/99designs/gqlgen/opentracing"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/opentracing/opentracing-go"
@@ -103,8 +103,8 @@ func main() {
 				&emailconf,
 				&h,
 			)),
-		handler.ResolverMiddleware(gqlopentracing.ResolverMiddleware()),
-		handler.RequestMiddleware(gqlopentracing.RequestMiddleware()),
+		//handler.ResolverMiddleware(gqlopentracing.ResolverMiddleware()),
+		//handler.RequestMiddleware(gqlopentracing.RequestMiddleware()),
 		handler.WebsocketUpgrader(websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true

@@ -1,18 +1,57 @@
 # testworkflowconfig
 workflowname: "Согласование ТКП"
 
-# Activity 1
+activity:
+ 1:
 # время ожидания перед запуском действия (минуты)
-scheduletostarttimeout1: 3
+  scheduletostarttimeout: 1
 # время ожидания от начала выполнения до конца (минуты)
-starttoclosetimeout1: 4
+  starttoclosetimeout: 1
 # максимальный интервал, на который сервер должен слышать по крайней мере один пинг из активности (минуты)
-heartbeattimeout1: 0
+  heartbeattimeout: 0
+# массив таймингов напоминаний
+#  activityreminders:
+#   1:
+#    remindertime: 1
+#    remindertext: "1 Приближается срок выполнения задачи! Осталось 1 час"
+#   2:
+#    remindertime: 3
+#    remindertext: "1 Приближается срок выполнения задачи! Осталось 0 час"
 
-# Activity 2
+ 2:
 # время ожидания перед запуском действия (минуты)
-scheduletostarttimeout2: 5
+  scheduletostarttimeout: 2
 # время ожидания от начала выполнения до конца (минуты)
-starttoclosetimeout2: 7200
+  starttoclosetimeout: 3
 # максимальный интервал, на который сервер должен слышать по крайней мере один пинг из активности (минуты)
-heartbeattimeout2: 0
+  heartbeattimeout: 0
+# массив таймингов напоминаний
+  activityreminders:
+   1:
+    remindertime: 1
+    remindertext: "Приближается срок выполнения задачи! Осталось 2 минуты"
+   2:
+    remindertime: 2
+    remindertext: "Приближается срок выполнения задачи! Осталось 1 минута"
+   3:
+    remindertime: 3
+    remindertext: "Приближается срок выполнения задачи! Осталось 0 минут"
+
+ 3:
+# время ожидания перед запуском действия (минуты)
+  scheduletostarttimeout: 1
+# время ожидания от начала выполнения до конца (минуты)
+  starttoclosetimeout: 5
+# максимальный интервал, на который сервер должен слышать по крайней мере один пинг из активности (минуты)
+  heartbeattimeout: 0
+# массив таймингов напоминаний
+  activityreminders:
+   1:
+    remindertime: 2
+    remindertext: "Приближается срок выполнения задачи! Осталось 3 минуты"
+   2:
+    remindertime: 3
+    remindertext: "Приближается срок выполнения задачи! Осталось 2 минута"
+   3:
+    remindertime: 4
+    remindertext: "Приближается срок выполнения задачи! Осталось 1 минута"
