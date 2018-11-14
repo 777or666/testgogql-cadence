@@ -7,6 +7,7 @@ type WorkflowConfiguration struct {
 }
 
 type WorkflowActivityConfig struct {
+	ActivityId             string                      `yaml:"activityid"`
 	ScheduleToStartTimeout int                         `yaml:"scheduletostarttimeout"`
 	StartToCloseTimeout    int                         `yaml:"starttoclosetimeout"`
 	HeartbeatTimeout       int                         `yaml:"heartbeattimeout"`

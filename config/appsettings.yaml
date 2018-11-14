@@ -9,13 +9,13 @@ urlrestservice: "http://10.174.18.121:8088"
 
 appname: "AXI-BPM"
 # префикс полного наименования методов бизнес-процессов
-prefixworkflowfunc: "github.com/777or666/testgogql-cadence/axibpmWorkflows."
+prefixworkflowfunc: "github.com/777or666/testgogql-cadence/axibpmWorkflows"
 # e-mail рассылка
 emailidentity: ""
-emailfrom: "___@___"
-emailusername: "___@___"
-emailpassword: "__"
-emailhost: "mail.____"
+emailfrom: "_@_"
+emailusername: "_@_"
+emailpassword: "_"
+emailhost: "_"
 emailport: "25"
 
 # host: "195.209.35.28:7933"

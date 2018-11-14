@@ -1,6 +1,7 @@
 package axibpmWorkflows
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"time"
@@ -19,9 +20,9 @@ const (
 )
 
 // Выполняем воркфлоу
-func TestWorkflow(ctx workflow.Context, id string, emailconfig *helpers.EmailConfig, EmailResponsible []*string, EmailParticipants []*string) (result string, err error) {
+func TestWorkflow(ctx workflow.Context, id string, emailconfig *helpers.EmailConfig, EmailResponsible []*string, EmailParticipants []*string, input string) (result string, err error) {
 
-	//Чтение файла конфигурации
+	//***Чтение файла конфигурации****
 	configData, err := ioutil.ReadFile(configfileTestworkflow)
 	if err != nil {
 		panic(fmt.Sprintf("Ошибка чтения файла: %v, Error: %v", configfileTestworkflow, err))
@@ -34,27 +35,26 @@ func TestWorkflow(ctx workflow.Context, id string, emailconfig *helpers.EmailCon
 	}
 	//*******************************
 
+	//НЕ СРАБОТАЛО! Приходится задавать таймауты "сверху"
+	//лучше таймауты задавать в конфигурации так как там заданы таймауты операций
+	//ctx = workflow.WithExecutionStartToCloseTimeout(ctx, time.Second*45)
+
 	// ***Activity 1 - EmailSenderActivity***
 	ao1 := workflow.ActivityOptions{
 		ScheduleToStartTimeout: time.Duration(Config.WorkflowActivity[1].ScheduleToStartTimeout) * time.Minute,
 		StartToCloseTimeout:    time.Duration(Config.WorkflowActivity[1].StartToCloseTimeout) * time.Minute,
 		HeartbeatTimeout:       time.Duration(Config.WorkflowActivity[1].HeartbeatTimeout) * time.Minute,
 	}
+
 	ctx1 := workflow.WithActivityOptions(ctx, ao1)
 	logger := workflow.GetLogger(ctx)
-	//запускаем таймеры оповещений в данном случае только для второй Activity
-	//childCtx, cancelHandler := workflow.WithCancel(ctx)
-	//selector := workflow.NewSelector(ctx)
-	//var processingDone bool
 
 	//workflow.Go(ctx, func(ctx workflow.Context) {
 
 	testResult := ""
-	mime := "MIME-version: 1.0;\nContent-Type: text/plain; charset=\"UTF-8\";\n\n"
-	subject := "Subject: " + Config.WorkflowName + ". Старт процесса - " + id + "\n"
-	emailbody := subject + mime + "\n" +
-		"Старт тестового процесса\n" + "id: " +
-		id + "\n"
+
+	subject := Config.WorkflowName + ". Старт процесса - " + id
+	emailbody := "Старт тестового процесса\n" + input + "\n"
 
 	var addressees []string
 	//ВНИМАНИЕ! Пока все адреса добавляются в кучу!! ПЕРЕДЕЛАТЬ
@@ -67,9 +67,26 @@ func TestWorkflow(ctx workflow.Context, id string, emailconfig *helpers.EmailCon
 		addressees = append(addressees, *value)
 	}
 
+	emailrequest := helpers.NewEmailRequest(
+		addressees,
+		subject,
+		emailbody,
+		emailconfig,
+	)
+
+	//	templateData := helpers.WorkflowInput{
+	//		UserData:     helpers.WorkflowInputUser{Username: "Иванов И.И."},
+	//		WorkflowData: helpers.WorkflowInputObject{ObjectHref: "https://mediametrics.ru/rating/ru/online.html"}}
+
+	wrfinput := helpers.WorkflowInput{}
+	json.Unmarshal([]byte(input), &wrfinput)
+
+	emailrequest.ParseEmailTemplate("templates/emailmaintemplate.html", wrfinput)
+
 	logger.Info("Start EmailSenderActivity")
 
-	err = workflow.ExecuteActivity(ctx1, axibpmActivities.EmailSenderActivity, addressees, emailbody, emailconfig).Get(ctx, &testResult)
+	//err = workflow.ExecuteActivity(ctx1, axibpmActivities.EmailSenderActivity, addressees, emailbody, subject, emailconfig).Get(ctx, &testResult)
+	err = workflow.ExecuteActivity(ctx1, axibpmActivities.EmailSenderActivity, emailrequest).Get(ctx, &testResult)
 
 	logger.Info("EmailSenderActivity result: " + testResult)
 
@@ -85,6 +102,7 @@ func TestWorkflow(ctx workflow.Context, id string, emailconfig *helpers.EmailCon
 	var processingDone bool
 
 	ao2 := workflow.ActivityOptions{
+		ActivityID:             Config.WorkflowActivity[2].ActivityId,
 		ScheduleToStartTimeout: time.Duration(Config.WorkflowActivity[2].ScheduleToStartTimeout) * time.Minute,
 		StartToCloseTimeout:    time.Duration(Config.WorkflowActivity[2].StartToCloseTimeout) * time.Minute,
 		HeartbeatTimeout:       time.Duration(Config.WorkflowActivity[2].HeartbeatTimeout) * time.Minute,
@@ -113,11 +131,18 @@ func TestWorkflow(ctx workflow.Context, id string, emailconfig *helpers.EmailCon
 			if !processingDone {
 				// обработка еще не завершена, когда срабатывает таймер, отправляем уведомление по электронной почте
 
-				subject = "Subject: " + Config.WorkflowName + ". ОПОВЕЩЕНИЕ" + "! (" + id + ")\n"
-				emailbody = subject + mime + "\n" +
-					Config.WorkflowActivity[2].ActivityReminders[bodycounter].ReminderText + "\n" +
+				subject = Config.WorkflowName + ". ОПОВЕЩЕНИЕ" + "! (" + id + ")"
+				emailbody = Config.WorkflowActivity[2].ActivityReminders[bodycounter].ReminderText + "\n" +
 					"id: " + id + "\n"
-				err = workflow.ExecuteActivity(ctx1, axibpmActivities.EmailSenderActivity, addressees, emailbody, emailconfig).Get(ctx, &testResult)
+
+				emailrequest = helpers.NewEmailRequest(
+					addressees,
+					subject,
+					emailbody,
+					emailconfig,
+				)
+				//err = workflow.ExecuteActivity(ctx1, axibpmActivities.EmailSenderActivity, addressees, emailbody, subject, emailconfig).Get(ctx, &testResult)
+				err = workflow.ExecuteActivity(ctx1, axibpmActivities.EmailSenderActivity, emailrequest).Get(ctx, &testResult)
 				bodycounter++
 			}
 		})
@@ -140,10 +165,16 @@ func TestWorkflow(ctx workflow.Context, id string, emailconfig *helpers.EmailCon
 	if err != nil {
 		logger.Error("ОШИБКА! Тестовая операция не выполнена", zap.Error(err))
 
-		subject = "Subject: " + Config.WorkflowName + ". ПРОЦЕСС НЕ ВЫПОЛНЕН" + "!\n"
-		emailbody = subject + mime + "\n" + "Аварийное завершение процесса - " + id + "\n"
-
-		err = workflow.ExecuteActivity(ctx1, axibpmActivities.EmailSenderActivity, addressees, emailbody, emailconfig).Get(ctx, &testResult)
+		subject = Config.WorkflowName + ". ПРОЦЕСС НЕ ВЫПОЛНЕН" + "!"
+		emailbody = "Аварийное завершение процесса - " + id + "\n"
+		emailrequest = helpers.NewEmailRequest(
+			addressees,
+			subject,
+			emailbody,
+			emailconfig,
+		)
+		//err = workflow.ExecuteActivity(ctx1, axibpmActivities.EmailSenderActivity, addressees, emailbody, subject, emailconfig).Get(ctx, &testResult)
+		err = workflow.ExecuteActivity(ctx1, axibpmActivities.EmailSenderActivity, emailrequest).Get(ctx, &testResult)
 
 		if err != nil {
 			logger.Error("ОШИБКА! Выполнить е-маил рассылку не удалось.", zap.Error(err))
@@ -156,11 +187,12 @@ func TestWorkflow(ctx workflow.Context, id string, emailconfig *helpers.EmailCon
 	//****************************************
 
 	//***Activity 3 - TestActivity***
-	logger.Info("---СТАРТ TestActivity 2!---")
+	logger.Info("---СТАРТ TestActivity 3!---")
 
 	processingDone = false
 
 	ao3 := workflow.ActivityOptions{
+		ActivityID:             Config.WorkflowActivity[3].ActivityId,
 		ScheduleToStartTimeout: time.Duration(Config.WorkflowActivity[3].ScheduleToStartTimeout) * time.Minute,
 		StartToCloseTimeout:    time.Duration(Config.WorkflowActivity[3].StartToCloseTimeout) * time.Minute,
 		HeartbeatTimeout:       time.Duration(Config.WorkflowActivity[3].HeartbeatTimeout) * time.Minute,
@@ -189,11 +221,18 @@ func TestWorkflow(ctx workflow.Context, id string, emailconfig *helpers.EmailCon
 			if !processingDone {
 				// обработка еще не завершена, когда срабатывает таймер, отправляем уведомление по электронной почте
 
-				subject = "Subject: " + Config.WorkflowName + ". ОПОВЕЩЕНИЕ" + "! (" + id + ")\n"
-				emailbody = subject + mime + "\n" +
-					Config.WorkflowActivity[3].ActivityReminders[bodycounter].ReminderText + "\n" +
+				subject = Config.WorkflowName + ". ОПОВЕЩЕНИЕ" + "! (" + id + ")"
+				emailbody = Config.WorkflowActivity[3].ActivityReminders[bodycounter].ReminderText + "\n" +
 					"id: " + id + "\n"
-				err = workflow.ExecuteActivity(ctx1, axibpmActivities.EmailSenderActivity, addressees, emailbody, emailconfig).Get(ctx, &testResult)
+
+				emailrequest = helpers.NewEmailRequest(
+					addressees,
+					subject,
+					emailbody,
+					emailconfig,
+				)
+				//err = workflow.ExecuteActivity(ctx1, axibpmActivities.EmailSenderActivity, addressees, emailbody, subject, emailconfig).Get(ctx, &testResult)
+				err = workflow.ExecuteActivity(ctx1, axibpmActivities.EmailSenderActivity, emailrequest).Get(ctx, &testResult)
 				bodycounter++
 			}
 		})
@@ -216,10 +255,18 @@ func TestWorkflow(ctx workflow.Context, id string, emailconfig *helpers.EmailCon
 	if err != nil {
 		logger.Error("ОШИБКА! Тестовая операция не выполнена", zap.Error(err))
 
-		subject = "Subject: " + Config.WorkflowName + ". ПРОЦЕСС НЕ ВЫПОЛНЕН" + "!\n"
-		emailbody = subject + mime + "\n" + "Аварийное завершение процесса - " + id + "\n"
+		subject = Config.WorkflowName + ". ПРОЦЕСС НЕ ВЫПОЛНЕН" + "!"
+		emailbody = "Аварийное завершение процесса - " + id + "\n"
 
-		err = workflow.ExecuteActivity(ctx1, axibpmActivities.EmailSenderActivity, addressees, emailbody, emailconfig).Get(ctx, &testResult)
+		emailrequest = helpers.NewEmailRequest(
+			addressees,
+			subject,
+			emailbody,
+			emailconfig,
+		)
+
+		//err = workflow.ExecuteActivity(ctx1, axibpmActivities.EmailSenderActivity, addressees, emailbody, subject, emailconfig).Get(ctx, &testResult)
+		err = workflow.ExecuteActivity(ctx1, axibpmActivities.EmailSenderActivity, emailrequest).Get(ctx, &testResult)
 
 		if err != nil {
 			logger.Error("ОШИБКА! Выполнить е-маил рассылку не удалось.", zap.Error(err))
@@ -232,10 +279,17 @@ func TestWorkflow(ctx workflow.Context, id string, emailconfig *helpers.EmailCon
 	//****************************************
 
 	// ***Activity 4 - EmailSenderActivity***
-	subject = "Subject: " + Config.WorkflowName + ". ПРОЦЕСС ВЫПОЛНЕН - " + id + "!\n"
-	emailbody = subject + mime + "\n" + "Процесс успешно завершен\n" +
-		"id: " + id + "\n"
-	err = workflow.ExecuteActivity(ctx1, axibpmActivities.EmailSenderActivity, addressees, emailbody, emailconfig).Get(ctx, &testResult)
+	subject = Config.WorkflowName + ". ПРОЦЕСС ВЫПОЛНЕН - " + id + "!"
+	emailbody = "Процесс успешно завершен\n" + "id: " + id + "\n"
+	emailrequest = helpers.NewEmailRequest(
+		addressees,
+		subject,
+		emailbody,
+		emailconfig,
+	)
+
+	//err = workflow.ExecuteActivity(ctx1, axibpmActivities.EmailSenderActivity, addressees, emailbody, subject, emailconfig).Get(ctx, &testResult)
+	err = workflow.ExecuteActivity(ctx1, axibpmActivities.EmailSenderActivity, emailrequest).Get(ctx, &testResult)
 
 	if err != nil {
 		logger.Error("ОШИБКА! Выполнить е-маил рассылку не удалось.", zap.Error(err))

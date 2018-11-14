@@ -62,6 +62,22 @@ type mutationResolver struct{ *resolver }
 //Запуск бизнес-процесса
 //id - идентификатор процесса
 //name - программное наименование функции воркфлоу (пример, "TestWorkflow")
+//input - JSON информация о пользователе вида:
+//{
+//  "user": {
+//    "useremail": "777@mail.ru",
+//    "username": "Иванов И.И.",
+//    "department": "Коммерческий отдел"
+//  },
+//  "workflowdata": {
+//    "objectId": "8e0928cc-43f4-4c60-9d1a-c3f13a2787ef",
+//    "objectHref": "https://mediametrics.ru/rating/ru/online.html",
+//    "objectName": "КП для Газпрома на 1000 УУГ",
+//    "objectType": "Коммерческое предложение (КП)",
+//	  "activity": "Новое ТКП"
+//    "comment": "СРОЧНО! Необходимо!"
+//  }
+//}
 //ExecutionStartToCloseTimeout - тайм-айт выполнения рабочего процесса
 //DecisionTaskStartToCloseTimeout - тайм-аут для обработки задачи решения с момента, когда воркер вытащил эту задачу
 //EmailResponsible - e-mail ответственных
@@ -100,9 +116,9 @@ func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name st
 
 	//log.Println("startWorkflow! " + name)
 
-	fullname := PrefixWorkflowFunc + name
+	fullname := PrefixWorkflowFunc + "." + name
 
-	wfId, wfRunId := h.StartWorkflow(workflowOptions, fullname, id, EmailConfiguration, EmailResponsible, EmailParticipants)
+	wfId, wfRunId := h.StartWorkflow(workflowOptions, fullname, id, EmailConfiguration, EmailResponsible, EmailParticipants, *input)
 
 	cteatedAt := time.Now()
 
