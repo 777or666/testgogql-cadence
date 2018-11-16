@@ -7,11 +7,16 @@ import (
 )
 
 type Activity struct {
-	ID         string  `json:"id"`
-	ActivityID *string `json:"activityID"`
-	RunID      *string `json:"runID"`
-	Token      string  `json:"token"`
-	IsApproved *bool   `json:"isApproved"`
+	ID                  string   `json:"id"`
+	ActivityID          string   `json:"activityID"`
+	Description         string   `json:"description"`
+	Operation           string   `json:"operation"`
+	Roles               []string `json:"roles"`
+	Starttoclosetimeout int      `json:"starttoclosetimeout"`
+	IsDone              bool     `json:"isDone"`
+	InWork              bool     `json:"inWork"`
+	IsCanceled          bool     `json:"isCanceled"`
+	Error               string   `json:"Error"`
 }
 
 type Domain struct {
@@ -33,8 +38,10 @@ type Workflow struct {
 	CloseStatus   *string    `json:"closeStatus"`
 	HistoryLength *int       `json:"historyLength"`
 	JSONHistory   *string    `json:"jsonHistory"`
-	Input         *string    `json:"input"`
 	Result        *string    `json:"result"`
+	IsDone        *bool      `json:"isDone"`
+	IsCanceled    *bool      `json:"isCanceled"`
+	InWork        *bool      `json:"inWork"`
 	Activities    []Activity `json:"activities"`
 	CreatedAt     time.Time  `json:"createdAt"`
 }

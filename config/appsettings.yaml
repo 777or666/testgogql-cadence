@@ -15,7 +15,7 @@ emailidentity: ""
 emailfrom: "_@_"
 emailusername: "_@_"
 emailpassword: "_"
-emailhost: "_"
+emailhost: "mail._"
 emailport: "25"
 
 # host: "195.209.35.28:7933"

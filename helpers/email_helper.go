@@ -13,13 +13,9 @@ type EmailRequest struct {
 	Config  *EmailConfig
 }
 
-func NewEmailRequest(to []string, subject string, body string, config *EmailConfig) *EmailRequest {
-	return &EmailRequest{
-		To:      to,
-		Subject: subject,
-		Body:    body,
-		Config:  config,
-	}
+type EmailRequestData struct {
+	Message      string
+	WorkflowData WorkflowInput
 }
 
 func (r *EmailRequest) ParseEmailTemplate(templateFileName string, data interface{}) error {

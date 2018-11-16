@@ -1,19 +1,45 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
-
 </head>
-
 <body>
-<p>
-	{{with .UserData}}
-    	{{.Username}}
-	{{end}}
+<div>
+	<p>{{.Message}}</p>		
+	<div>	
 	{{with .WorkflowData}}
-		<h2>{{.ObjectId}}</h2>
-    	<a href="{{.ObjectHref}}">Ссылка на объект</a>
+		<div>
+		<p>
+		{{with .WorkflowData}}
+			<span>Комментарий: {{.Comment}}</span><br>
+			<p>Ссылка: <a href="{{.ObjectHref}}">{{.ObjectName}}</a></p>
+		{{end}}
+		</p>
+		</div>
+		<div>
+		<p>
+		{{with .UserData}}		
+	    	Автор: {{.Username}}<br>
+			Е-маил: {{.Useremail}}<br>
+			Департамент: {{.Department}}<br>
+		{{end}}
+		</p>
+		</div>
+		<div style="color:  #6d6d6d;">
+		<p>
+		{{with .WorkflowData}}
+			<span>Тип объекта: {{.ObjectType}}</span><br>
+			<span>Id объекта: {{.ObjectId}}</span>	    	
+		{{end}}
+		</p>
+		</div>
 	{{end}}
-</p>
+	</div>
+	<div style="font-size:8pt; color:#93b9ca; text-align: center;">
+		<p>
+			Письмо сгенерировано системой AXI-BPM, &#169; ООО "АКСИТЕХ"
+		</p>
+	</div>
+</div>
     
 </body>
 

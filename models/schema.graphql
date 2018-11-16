@@ -16,19 +16,26 @@ type Workflow {
 	closeTime: Time
 	closeStatus: String
 	historyLength: Int
-	jsonHistory: String
-	input: String
+	jsonHistory: String	
 	result: String
+	isDone: Boolean
+	isCanceled: Boolean
+	inWork: Boolean
 	activities: [Activity!]
 	createdAt: Time!
 }
 
 type Activity{
 	id: ID!	
-	activityID: String
-	runID: String
-	token: String!
-	isApproved: Boolean
+	activityID: String!
+	description: String!
+	operation: String!
+	roles: [String!]
+	starttoclosetimeout: Int!
+	isDone: Boolean!
+	inWork: Boolean!
+	isCanceled: Boolean!
+	Error: String!	
 }
 
 type Query {	
@@ -42,9 +49,9 @@ type Query {
 type Mutation {
 	workflowStart(id: ID!, name: String!, input: String, ExecutionStartToCloseTimeout: Int, DecisionTaskStartToCloseTimeout: Int, EmailResponsible: [String], EmailParticipants: [String]): Workflow!
 	workflowCancel(id: ID!, runID: String): String
-	workflowTerminate(id: ID!, runID: String, reason: String, info: String): String
-	activityPerform(domain: String, workflowID: String!, runID: String, activityID: String!, info: String): String	
-	activityFailed(domain: String, workflowID: String!, runID: String, activityID: String!, info: String): String	
+	workflowTerminate(id: ID!, runID: String, reason: String, input: String): String
+	activityPerform(domain: String, workflowID: String!, runID: String, activityID: String!, input: String): String	
+	activityFailed(domain: String, workflowID: String!, runID: String, activityID: String!, input: String): String	
 }
 
 type Subscription {

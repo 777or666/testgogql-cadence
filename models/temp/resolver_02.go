@@ -8,8 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/777or666/testgogql-cadence/axibpmActivities"
-	"github.com/777or666/testgogql-cadence/axibpmWorkflows"
+	"io/ioutil"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/777or666/testgogql-cadence/helpers"
 
@@ -17,18 +18,20 @@ import (
 
 	"github.com/go-resty/resty"
 	//"github.com/pborman/uuid"
-	"go.uber.org/cadence/activity"
+	"go.uber.org/cadence"
 	"go.uber.org/cadence/client"
-	"go.uber.org/cadence/worker"
-	"go.uber.org/cadence/workflow"
 )
 
 var UrlRestService string
-var h helpers.SampleHelper
+var h *helpers.SampleHelper
 var workflowClient client.Client
 var ApplicationName string //ВСЕГДА должно совпадать в воркере и всех его воркфлоу
 var PrefixWorkflowFunc string
-var DomainId string //domainId не удалось вытащить из сервиса cadence-web поэтому задаем жестко
+var EmailConfiguration *helpers.EmailConfig
+
+const (
+	pathtoworkflows = "axibpmWorkflows/"
+)
 
 type resolver struct {
 	mu sync.Mutex // nolint: structcheck
@@ -44,91 +47,113 @@ func (r *resolver) Subscription() SubscriptionResolver {
 	return &subscriptionResolver{r}
 }
 
-//****************************************
-// Регистрируем все воркфлоу и активности
-func init() {
-	workflow.Register(axibpmWorkflows.TestWorkflow)
-	activity.Register(axibpmActivities.TestActivity)
-}
-
-//****************************************
-
-func New(urlRestService string, applicationName string, prefixworkflowfunc string, domainId string) Config {
-
+func New(urlRestService string, applicationName string, prefixworkflowfunc string, emailconfig *helpers.EmailConfig, hw *helpers.SampleHelper) Config {
 	UrlRestService = urlRestService
 	ApplicationName = applicationName
 	PrefixWorkflowFunc = prefixworkflowfunc
-	DomainId = domainId
+	EmailConfiguration = emailconfig
+	h = hw
 
-	h.SetupServiceConfig()
 	var err error
 	workflowClient, err = h.Builder.BuildCadenceClient()
+
 	if err != nil {
 		log.Println("ОШИБКА при BuildCadenceClient: " + err.Error())
 		panic(err)
 	}
-	startWorkers(&h)
 
 	return Config{Resolvers: &resolver{}}
 }
 
 type mutationResolver struct{ *resolver }
 
-// Запускаем воркера
-func startWorkers(h *helpers.SampleHelper) {
-	// Конфигурация воркера
-	workerOptions := worker.Options{
-		MetricsScope: h.Scope,
-		Logger:       h.Logger,
-	}
-	h.StartWorkers(h.Config.DomainName, ApplicationName, workerOptions)
-}
-
-//Запуск задачи
-//id -идентификатор
-//name - программное наименование функции воркфлоу с пакетом (пример, "TestWorkflow")
-//taskList - наименование типа списка задач
-func startWorkflow(h *helpers.SampleHelper, id string, name string) (string, string) {
-	workflowOptions := client.StartWorkflowOptions{
-		ID:                              id,
-		TaskList:                        ApplicationName,
-		ExecutionStartToCloseTimeout:    2 * time.Minute,
-		DecisionTaskStartToCloseTimeout: 2 * time.Minute,
-	}
-
-	//log.Println("startWorkflow! " + name)
-
-	fullname := PrefixWorkflowFunc + name
-
-	wfid, rid := h.StartWorkflow(workflowOptions, fullname, id)
-
-	return wfid, rid
-}
-
-//TODO: input возможно не нужны!
-//TODO: taskList точно не нужен, так как должен точно совпадать с аппнэймом в воркере!
-func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name string, taskList string, input *string) (Workflow, error) {
+//Запуск бизнес-процесса
+//id - идентификатор процесса
+//name - программное наименование функции воркфлоу (пример, "TestWorkflow")
+//input - JSON информация о пользователе вида:
+//{
+//  "user": {
+//    "useremail": "777@mail.ru",
+//    "username": "Иванов И.И.",
+//    "department": "Коммерческий отдел"
+//  },
+//  "workflowdata": {
+//    "objectId": "8e0928cc-43f4-4c60-9d1a-c3f13a2787ef",
+//    "objectHref": "https://mediametrics.ru/rating/ru/online.html",
+//    "objectName": "КП для Газпрома на 1000 УУГ",
+//    "objectType": "Коммерческое предложение (КП)",
+//	  "activity": "Новое ТКП"
+//    "comment": "СРОЧНО! Необходимо!"
+//  }
+//}
+//ExecutionStartToCloseTimeout - тайм-айт выполнения рабочего процесса
+//DecisionTaskStartToCloseTimeout - тайм-аут для обработки задачи решения с момента, когда воркер вытащил эту задачу
+//EmailResponsible - e-mail ответственных
+//EmailParticipants - e-mail остальных участников процесса
+func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name string, input *string, ExecutionStartToCloseTimeout *int, DecisionTaskStartToCloseTimeout *int, EmailResponsible []*string, EmailParticipants []*string) (Workflow, error) {
 	//r.mu.Lock()
 
 	//token := new(string)
 
 	//Запускаем задачу
-	wfId, wfRunId := startWorkflow(&h, id, name)
 
 	//r.mu.Unlock()
-
 	cteatedAt := time.Now()
 
-	//монитруем токен
-	//{"domainId":"DomainId","workflowId":"wfId","runId":"wfRunId",
-	// "scheduleId":5,"scheduleAttempt":0,"activityId":""}
-	token := "{\"domainId\":\"" + DomainId + "\",\"workflowId\":\"" + wfId + "\",\"runId\":\"" + wfRunId + "\",\"scheduleId\":5,\"scheduleAttempt\":0,\"activityId\":\"\"}"
+	workflowOptions := client.StartWorkflowOptions{
+		ID:       id,
+		TaskList: ApplicationName,
+		//ExecutionStartToCloseTimeout - тайм-аут выполнения рабочего процесса
+		ExecutionStartToCloseTimeout: time.Duration(*ExecutionStartToCloseTimeout) * time.Minute,
+		//DecisionTaskTartToCloseTimeout - тайм-аут для обработки задачи решения с момента, когда рабочий
+		// вытащил эту задачу. Если задача решения потеряна, она повторится после этого таймаута.
+		DecisionTaskStartToCloseTimeout: time.Duration(*DecisionTaskStartToCloseTimeout) * time.Minute,
+		WorkflowIDReusePolicy:           2, // см. ниже
+		// 0
+		// WorkflowIDReusePolicyAllowDuplicateFailedOnly позволяет запустить выполнение рабочего процесса
+		// когда рабочий процесс не запущен, а состояние завершения последнего выполнения находится в
+		// [завершено, отменено, время ожидания, не выполнено].
+		// WorkflowIDReusePolicyAllowDuplicateFailedOnly WorkflowIDReusePolicy = iota
+		// 1
+		// WorkflowIDReusePolicyAllowDuplicate позволяет запустить выполнение рабочего процесса, используя
+		// тот же идентификатор рабочего процесса, когда рабочий процесс не запущен.
+		//WorkflowIDReusePolicyAllowDuplicate
+		// 2
+		// WorkflowIDReusePolicyRejectDuplicate не позволяет запустить выполнение рабочего процесса с использованием того же идентификатора рабочего процесса вообще
+		//WorkflowIDReusePolicyRejectDuplicate
+	}
 
-	var x []Activity
-	x = make([]Activity, 1)
-	x[0] = Activity{
-		ID:    "123123123123123",
-		Token: token,
+	//log.Println("startWorkflow! " + name)
+
+	fullname := PrefixWorkflowFunc + "." + name
+
+	wfId, wfRunId := h.StartWorkflow(workflowOptions, fullname, id, EmailConfiguration, EmailResponsible, EmailParticipants, *input)
+
+	//***Чтение файла конфигурации workflow*******
+	wfData, err := ioutil.ReadFile(pathtoworkflows + "/" + name + ".yaml")
+	if err != nil {
+		log.Println("Ошибка чтения файла конфигурации процесса", err.Error())
+		return Workflow{}, err
+	}
+
+	Config := helpers.WorkflowConfiguration{}
+
+	if err := yaml.Unmarshal(wfData, &Config); err != nil {
+		log.Println("Ошибка инициализации файла конфигурации процесса", err.Error())
+		return Workflow{}, err
+	}
+	//*******************************
+
+	var m []Activity
+	//генерим массив операций []Activity
+	for _, v := range Config.WorkflowActivity {
+		if v.ActivityId != "" {
+			temp := Activity{
+				ActivityID:          &v.ActivityId,
+				Starttoclosetimeout: &v.StartToCloseTimeout,
+			}
+			m = append(m, temp)
+		}
 	}
 
 	//TODO: продумать состав, надо пробросить тамауты, инпуты и т.д.
@@ -137,47 +162,72 @@ func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name st
 		Name:       name,
 		WorkflowID: wfId,
 		RunID:      wfRunId,
-		TaskList:   taskList,
 		CreatedAt:  cteatedAt,
-		Activities: x,
+		StartTime:  time.Now(),
+		Activities: m,
+		TaskList:   ApplicationName,
 	}
 
-	return wrf, nil // nil заменить на err
+	return wrf, nil //nil заменить на err
 }
-func (r *mutationResolver) WorkflowCancel(ctx context.Context, id string) (Workflow, error) {
-	panic("not implemented")
-}
+func (r *mutationResolver) WorkflowCancel(ctx context.Context, id string, runID *string) (*string, error) {
+	result := "Бизнес-процесс отменен"
 
-//token вида {"domainId":"9d88d286-53e5-452d-93db-4ba8613f229f","workflowId":"73fe7be5-4504-449b-a9fe-7fa8023515e2","runId":"55493da9-5643-45d9-89eb-b0eb3828f9e9","scheduleId":5,"scheduleAttempt":0,"activityId":""}
-func (r *mutationResolver) ActivityApproval(ctx context.Context, token string) (*bool, error) {
-
-	state := "APPROVED"
-
-	log.Println("пришел token: " + token)
-
-	var result bool
-
-	err := workflowClient.CompleteActivity(context.Background(), []byte(token), state, nil)
+	err := workflowClient.CancelWorkflow(context.Background(), id, *runID)
 	if err != nil {
+		log.Println("ОШИБКА! Не удалось отменить бизнес-процесс. " + err.Error())
 
-		log.Println("ОШИБКА! Задача не выполнена. " + err.Error())
-		result = false
 		return nil, err
 	}
 
-	result = true
 	return &result, nil
 }
+func (r *mutationResolver) WorkflowTerminate(ctx context.Context, id string, runID *string, reason *string, input *string) (*string, error) {
+	result := "Бизнес-процесс прерван"
+	details := *input
 
-//token вида {"domainId":"9d88d286-53e5-452d-93db-4ba8613f229f","workflowId":"73fe7be5-4504-449b-a9fe-7fa8023515e2","runId":"55493da9-5643-45d9-89eb-b0eb3828f9e9","scheduleId":5,"scheduleAttempt":0,"activityId":""}
-func (r *mutationResolver) ActivityReject(ctx context.Context, token string) (*bool, error) {
-	panic("not implemented")
+	err := workflowClient.TerminateWorkflow(context.Background(), id, *runID, *reason, []byte(details))
+	if err != nil {
+		log.Println("ОШИБКА! Не удалось прервать бизнес-процесс. " + err.Error())
+
+		return nil, err
+	}
+
+	return &result, nil
+}
+func (r *mutationResolver) ActivityPerform(ctx context.Context, domain *string, workflowID string, runID *string, activityID string, input *string) (*string, error) {
+	result := "Операция выполнена"
+
+	log.Println("ActivityPerform! Старт")
+
+	err := workflowClient.CompleteActivityByID(context.Background(), *domain, workflowID, *runID, activityID, *input, nil)
+	if err != nil {
+
+		log.Println("ОШИБКА! Не удалось выполнить операцию. " + err.Error())
+
+		return nil, err
+	}
+
+	return &result, nil
+}
+func (r *mutationResolver) ActivityFailed(ctx context.Context, domain *string, workflowID string, runID *string, activityID string, input *string) (*string, error) {
+	result := "Операция отменена"
+
+	//добавить детали - причину отмены активности и кто ее отменил
+	err := workflowClient.CompleteActivityByID(context.Background(), *domain, workflowID, *runID, activityID, nil, cadence.NewCustomError(*input, result))
+	if err != nil {
+
+		log.Println("ОШИБКА! Не удалось отменить операцию. " + err.Error())
+
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 type queryResolver struct{ *resolver }
 
 func (r *queryResolver) Domain(ctx context.Context, name *string) (*Domain, error) {
-
 	//log.Println(UrlRestService)
 
 	resp, err := resty.R().Get(UrlRestService + "/api/domain/" + *name)
