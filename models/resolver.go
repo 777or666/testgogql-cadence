@@ -25,7 +25,11 @@ import (
 var UrlRestService string
 var h *helpers.SampleHelper
 var workflowClient client.Client
+
+//в конфигурации по умолчанию - AXI-BPM
 var ApplicationName string //ВСЕГДА должно совпадать в воркере и всех его воркфлоу
+//в конфигурации по умолчанию - axibpm-domain
+var ApplicationDomain string //операции activity вызываются по домену
 var PrefixWorkflowFunc string
 var EmailConfiguration *helpers.EmailConfig
 
@@ -47,9 +51,10 @@ func (r *resolver) Subscription() SubscriptionResolver {
 	return &subscriptionResolver{r}
 }
 
-func New(urlRestService string, applicationName string, prefixworkflowfunc string, emailconfig *helpers.EmailConfig, hw *helpers.SampleHelper) Config {
+func New(urlRestService string, applicationName string, domain string, prefixworkflowfunc string, emailconfig *helpers.EmailConfig, hw *helpers.SampleHelper) Config {
 	UrlRestService = urlRestService
 	ApplicationName = applicationName
+	ApplicationDomain = domain
 	PrefixWorkflowFunc = prefixworkflowfunc
 	EmailConfiguration = emailconfig
 	h = hw
@@ -101,18 +106,19 @@ type mutationResolver struct{ *resolver }
 //    ]
 //  }
 //}
+//, где:
 //ExecutionStartToCloseTimeout - тайм-айт выполнения рабочего процесса
 //DecisionTaskStartToCloseTimeout - тайм-аут для обработки задачи решения с момента, когда воркер вытащил эту задачу
 //EmailResponsible - e-mail ответственных
 //EmailParticipants - e-mail остальных участников процесса
-func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name string, input *string, ExecutionStartToCloseTimeout *int, DecisionTaskStartToCloseTimeout *int, EmailResponsible []*string, EmailParticipants []*string) (Workflow, error) {
+func (r *mutationResolver) WorkflowStart(ctx context.Context, workflowname string, input string) (Workflow, error) {
 	//r.mu.Lock()
 	//r.mu.Unlock()
 
 	cteatedAt := time.Now()
 
 	//Чтение файла конфигурации workflow
-	wfData, err := ioutil.ReadFile(pathtoworkflows + "/" + name + ".yaml")
+	wfData, err := ioutil.ReadFile(pathtoworkflows + "/" + workflowname + ".yaml")
 	if err != nil {
 		log.Println("Ошибка чтения файла конфигурации процесса", err.Error())
 		return Workflow{}, err
@@ -129,7 +135,7 @@ func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name st
 	//Маршалинг данных из input
 	wrfinput := helpers.WorkflowInput{}
 
-	if err = json.Unmarshal([]byte(*input), &wrfinput); err != nil {
+	if err = json.Unmarshal([]byte(input), &wrfinput); err != nil {
 		log.Println("Ошибка маршалинга JSON данных из input", err.Error())
 		return Workflow{}, err
 	}
@@ -141,16 +147,15 @@ func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name st
 		ID:       wrfinput.WorkflowSettings.WorkflowId,
 		TaskList: ApplicationName,
 		//Тайм-аут выполнения рабочего процесса
-		ExecutionStartToCloseTimeout: time.Duration(*ExecutionStartToCloseTimeout) * time.Minute,
+		ExecutionStartToCloseTimeout: time.Duration(wrfinput.WorkflowSettings.ExecutionStartToCloseTimeout) * time.Minute,
 		//Тайм-аут для обработки задачи с момента, когда рабочий
 		//вытащил эту задачу. Если задача решения потеряна, она повторится после этого таймаута.
-		DecisionTaskStartToCloseTimeout: time.Duration(*DecisionTaskStartToCloseTimeout) * time.Minute,
+		DecisionTaskStartToCloseTimeout: time.Duration(wrfinput.WorkflowSettings.DecisionTaskStartToCloseTimeout) * time.Minute,
 		WorkflowIDReusePolicy:           2, // см. описание в cadence
 	}
 
-	fullname := PrefixWorkflowFunc + "." + name
+	fullname := PrefixWorkflowFunc + "." + workflowname
 
-	//wfId, wfRunId := h.StartWorkflow(workflowOptions, fullname, id, EmailConfiguration, EmailResponsible, EmailParticipants, *input)
 	wfId, wfRunId := h.StartWorkflow(workflowOptions, fullname, wrfinput)
 
 	var m []Activity
@@ -170,8 +175,8 @@ func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name st
 
 	//TODO: продумать состав, надо пробросить тамауты, инпуты и т.д.
 	wrf := Workflow{
-		ID:         id,
-		Name:       name,
+		ID:         wrfinput.WorkflowSettings.WorkflowId,
+		Name:       workflowname,
 		WorkflowID: wfId,
 		RunID:      wfRunId,
 		CreatedAt:  cteatedAt,
@@ -182,10 +187,10 @@ func (r *mutationResolver) WorkflowStart(ctx context.Context, id string, name st
 
 	return wrf, nil //nil заменить на err
 }
-func (r *mutationResolver) WorkflowCancel(ctx context.Context, id string, runID *string) (*string, error) {
+func (r *mutationResolver) WorkflowCancel(ctx context.Context, workflowId string, runId *string) (*string, error) {
 	result := "Бизнес-процесс отменен"
 
-	err := workflowClient.CancelWorkflow(context.Background(), id, *runID)
+	err := workflowClient.CancelWorkflow(context.Background(), workflowId, *runId)
 	if err != nil {
 		log.Println("ОШИБКА! Не удалось отменить бизнес-процесс. " + err.Error())
 
@@ -194,11 +199,11 @@ func (r *mutationResolver) WorkflowCancel(ctx context.Context, id string, runID 
 
 	return &result, nil
 }
-func (r *mutationResolver) WorkflowTerminate(ctx context.Context, id string, runID *string, reason *string, input *string) (*string, error) {
+func (r *mutationResolver) WorkflowTerminate(ctx context.Context, workflowId string, runId *string, reason string, input string) (*string, error) {
 	result := "Бизнес-процесс прерван"
-	details := *input
+	details := input
 
-	err := workflowClient.TerminateWorkflow(context.Background(), id, *runID, *reason, []byte(details))
+	err := workflowClient.TerminateWorkflow(context.Background(), workflowId, *runId, reason, []byte(details))
 	if err != nil {
 		log.Println("ОШИБКА! Не удалось прервать бизнес-процесс. " + err.Error())
 
@@ -207,12 +212,12 @@ func (r *mutationResolver) WorkflowTerminate(ctx context.Context, id string, run
 
 	return &result, nil
 }
-func (r *mutationResolver) ActivityPerform(ctx context.Context, domain *string, workflowID string, runID *string, activityID string, input *string) (*string, error) {
+func (r *mutationResolver) ActivityPerform(ctx context.Context, workflowId string, runId *string, activityId string, input string) (*string, error) {
 	result := "Операция выполнена"
 
 	log.Println("ActivityPerform! Старт")
 
-	err := workflowClient.CompleteActivityByID(context.Background(), *domain, workflowID, *runID, activityID, *input, nil)
+	err := workflowClient.CompleteActivityByID(context.Background(), ApplicationDomain, workflowId, *runId, activityId, input, nil)
 	if err != nil {
 
 		log.Println("ОШИБКА! Не удалось выполнить операцию. " + err.Error())
@@ -222,11 +227,11 @@ func (r *mutationResolver) ActivityPerform(ctx context.Context, domain *string, 
 
 	return &result, nil
 }
-func (r *mutationResolver) ActivityFailed(ctx context.Context, domain *string, workflowID string, runID *string, activityID string, input *string) (*string, error) {
+func (r *mutationResolver) ActivityFailed(ctx context.Context, workflowId string, runId *string, activityId string, input string) (*string, error) {
 	result := "Операция отменена"
 
 	//добавить детали - причину отмены активности и кто ее отменил
-	err := workflowClient.CompleteActivityByID(context.Background(), *domain, workflowID, *runID, activityID, nil, cadence.NewCustomError(*input, result))
+	err := workflowClient.CompleteActivityByID(context.Background(), ApplicationDomain, workflowId, *runId, activityId, nil, cadence.NewCustomError(input, result))
 	if err != nil {
 
 		log.Println("ОШИБКА! Не удалось отменить операцию. " + err.Error())

@@ -12,6 +12,7 @@ import (
 
 	"github.com/777or666/testgogql-cadence/models"
 	"github.com/99designs/gqlgen/handler"
+
 	//gqlopentracing "github.com/99designs/gqlgen/opentracing"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -39,6 +40,7 @@ const (
 type Configuration struct {
 	UrlRestService     string `yaml:"urlrestservice"`
 	ApplicationName    string `yaml:"appname"`
+	Domain             string `yaml:"domain"`
 	PrefixWorkflowFunc string `yaml:"prefixworkflowfunc"`
 	EmailIdentity      string `yaml:"emailidentity"`
 	EmailFrom          string `yaml:"emailfrom"`
@@ -99,6 +101,7 @@ func main() {
 			models.New(
 				Config.UrlRestService,
 				Config.ApplicationName,
+				Config.Domain,
 				Config.PrefixWorkflowFunc,
 				&emailconf,
 				&h,
