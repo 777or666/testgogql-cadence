@@ -48,11 +48,13 @@ type WorkflowInputObject struct {
 	ObjectHref string `json:"objectHref"`
 	ObjectName string `json:"objectName"`
 	ObjectType string `json:"objectType"`
+	Activity   string `json:"activity"`
 	Comment    string `json:"comment"`
 }
 
 type WorkflowInputSettings struct {
 	WorkflowId                      string `json:"workflowId"`
+	RunId                           string `json:"runId"`
 	ExecutionStartToCloseTimeout    int    `json:"executionStartToCloseTimeout"`
 	DecisionTaskStartToCloseTimeout int    `json:"decisionTaskStartToCloseTimeout"`
 }
@@ -63,10 +65,16 @@ type WorkflowInputEmailAdresses struct {
 }
 
 type WorkflowInput struct {
-	UserData            WorkflowInputUser          `json:"user"`
-	WorkflowData        WorkflowInputObject        `json:"workflowdata"`
-	WorkflowSettings    WorkflowInputSettings      `json:"workflowsettings"`
-	WorkflowEmails      WorkflowInputEmailAdresses `json:"workflowemails"`
-	WorkflowEmailConfig EmailConfig                `json:"emailconfig"`
-	WorkflowConfig      WorkflowConfiguration      `json:"workflowconfiguration"`
+	//Данные пользователя (кто запустил процесс, кто выполнил/отменил оперцию/процесс и т.д.)
+	UserData WorkflowInputUser `json:"user"`
+	//Данные от объекте связанным с процессом
+	WorkflowData WorkflowInputObject `json:"workflowdata"`
+	//Настройки процесса (таймауты, id)
+	WorkflowSettings WorkflowInputSettings `json:"workflowsettings"`
+	//Список адресов рассылки уведомлений
+	WorkflowEmails WorkflowInputEmailAdresses `json:"workflowemails"`
+	//Настройки почтовых рассылок (пароли, порты и т.п., читается из конфига сервиса)
+	WorkflowEmailConfig EmailConfig `json:"emailconfig"`
+	//Настройки процесса (наименование и активности)
+	WorkflowConfig WorkflowConfiguration `json:"workflowconfiguration"`
 }

@@ -4,24 +4,24 @@ service: "cadence-frontend"
 
 # сервис из которого берем историю по воркфлоу, текущий статус, проверяем домены и т.п.
 # так как cadence работает по протоколу thrift
-# host: "10.174.18.121:7933"
-# urlrestservice: "http://10.174.18.121:8088"
+host: "10.174.18.121:7933"
+urlrestservice: "http://10.174.18.121:8088"
 
 appname: "AXI-BPM"
 # префикс полного наименования методов бизнес-процессов
 prefixworkflowfunc: "github.com/777or666/testgogql-cadence/axibpmWorkflows"
-# e-mail рассылка
-# emailidentity: ""
-# emailfrom: "_@_"
-# emailusername: "_@_"
-# emailpassword: "_"
-# emailhost: "mail._"
-# emailport: "25"
-
-host: "195.209.35.28:7933"
-urlrestservice: "http://195.209.35.28:8088"
-emailfrom: "_@gmail.com"
-emailusername: "_@gmail.com"
+#e-mail рассылка
+#emailidentity: ""
+emailfrom: "_@_"
+emailusername: "_@_"
 emailpassword: "_"
-emailhost: "smtp.gmail.com"
-emailport: "587"
+emailhost: "mail._"
+emailport: "25"
+
+#host: "195.209.35.28:7933"
+#urlrestservice: "http://195.209.35.28:8088"
+#emailfrom: "_@gmail.com"
+#emailusername: "_@gmail.com"
+#emailpassword: "_"
+#emailhost: "smtp.gmail.com"
+#emailport: "587"

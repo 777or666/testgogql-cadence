@@ -48,10 +48,10 @@ type Query {
 
 type Mutation {
 	workflowStart(workflowname: String!, input: String!): Workflow!
-	workflowCancel(workflowId: String!, runId: String): String
-	workflowTerminate(workflowId: String!, runId: String, reason: String!, input: String!): String
-	activityPerform(workflowId: String!, runId: String, activityId: String!, input: String!): String	
-	activityFailed(workflowId: String!, runId: String, activityId: String!, input: String!): String	
+	workflowCancel(reason: String!, input: String!): String
+	workflowTerminate(reason: String!, input: String!): String
+	activityPerform(activityId: String!, input: String!): String	
+	activityFailed(activityId: String!, input: String!): String	
 }
 
 type Subscription {

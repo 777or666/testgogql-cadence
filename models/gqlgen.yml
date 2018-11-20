@@ -1,31 +1,31 @@
 # Путь к файлу схемы
 # win
-# schema: C:\Users\m.kravetz\go\src\github.com\777or666\testgogql-cadence\models\schema.graphql
+schema: C:\Users\m.kravetz\go\src\github.com\777or666\testgogql-cadence\models\schema.graphql
 # linux
-schema: /home/misha/go/src/github.com/777or666/testgogql-cadence/models/schema.graphql
+#schema: /home/misha/go/src/github.com/777or666/testgogql-cadence/models/schema.graphql
 
 # Указываем путь для сгненерированного сервера и имя пакета
 exec:
 # win
-# filename: C:\Users\m.kravetz\go\src\github.com\777or666\testgogql-cadence\models\generated.go
+  filename: C:\Users\m.kravetz\go\src\github.com\777or666\testgogql-cadence\models\generated.go
 # linux
-  filename: /home/misha/go/src/github.com/777or666/testgogql-cadence/models/generated.go
+# filename: /home/misha/go/src/github.com/777or666/testgogql-cadence/models/generated.go
   package: models
 
 # Указываем путь к сгенерированной модели и имя пакета 
 model:
 # win
-# filename: C:\Users\m.kravetz\go\src\github.com\777or666\testgogql-cadence\models\models_gen.go
+  filename: C:\Users\m.kravetz\go\src\github.com\777or666\testgogql-cadence\models\models_gen.go
 # linux
-  filename: /home/misha/go/src/github.com/777or666/testgogql-cadence/models/models_gen.go
+# filename: /home/misha/go/src/github.com/777or666/testgogql-cadence/models/models_gen.go
   package: models
 
 # [Опционально] Путь к файлу заглушки резолвера и имя корневого типа
 resolver:
 # win
-# filename: C:\Users\m.kravetz\go\src\github.com\777or666\testgogql-cadence\models\resolver.go
+  filename: C:\Users\m.kravetz\go\src\github.com\777or666\testgogql-cadence\models\resolver.go
 #linux
-  filename: /home/misha/go/src/github.com/777or666/testgogql-cadence/models/resolver.go
+# filename: /home/misha/go/src/github.com/777or666/testgogql-cadence/models/resolver.go
   type: resolver  
 
 # [Опционально], создавать имена полей по тэгам 

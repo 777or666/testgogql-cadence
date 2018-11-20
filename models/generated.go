@@ -3,7 +3,7 @@
 package models
 
 import (
-	bytes "bytes"
+	"bytes"
 	context "context"
 	strconv "strconv"
 	sync "sync"
@@ -63,10 +63,10 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		WorkflowStart     func(childComplexity int, workflowname string, input string) int
-		WorkflowCancel    func(childComplexity int, workflowId string, runId *string) int
-		WorkflowTerminate func(childComplexity int, workflowId string, runId *string, reason string, input string) int
-		ActivityPerform   func(childComplexity int, workflowId string, runId *string, activityId string, input string) int
-		ActivityFailed    func(childComplexity int, workflowId string, runId *string, activityId string, input string) int
+		WorkflowCancel    func(childComplexity int, reason string, input string) int
+		WorkflowTerminate func(childComplexity int, reason string, input string) int
+		ActivityPerform   func(childComplexity int, activityId string, input string) int
+		ActivityFailed    func(childComplexity int, activityId string, input string) int
 	}
 
 	Query struct {
@@ -103,10 +103,10 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	WorkflowStart(ctx context.Context, workflowname string, input string) (Workflow, error)
-	WorkflowCancel(ctx context.Context, workflowId string, runId *string) (*string, error)
-	WorkflowTerminate(ctx context.Context, workflowId string, runId *string, reason string, input string) (*string, error)
-	ActivityPerform(ctx context.Context, workflowId string, runId *string, activityId string, input string) (*string, error)
-	ActivityFailed(ctx context.Context, workflowId string, runId *string, activityId string, input string) (*string, error)
+	WorkflowCancel(ctx context.Context, reason string, input string) (*string, error)
+	WorkflowTerminate(ctx context.Context, reason string, input string) (*string, error)
+	ActivityPerform(ctx context.Context, activityId string, input string) (*string, error)
+	ActivityFailed(ctx context.Context, activityId string, input string) (*string, error)
 }
 type QueryResolver interface {
 	Domain(ctx context.Context, name *string) (*Domain, error)
@@ -146,28 +146,23 @@ func field_Mutation_workflowStart_args(rawArgs map[string]interface{}) (map[stri
 func field_Mutation_workflowCancel_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["workflowId"]; ok {
+	if tmp, ok := rawArgs["reason"]; ok {
 		var err error
 		arg0, err = graphql.UnmarshalString(tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["workflowId"] = arg0
-	var arg1 *string
-	if tmp, ok := rawArgs["runId"]; ok {
+	args["reason"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["input"]; ok {
 		var err error
-		var ptr1 string
-		if tmp != nil {
-			ptr1, err = graphql.UnmarshalString(tmp)
-			arg1 = &ptr1
-		}
-
+		arg1, err = graphql.UnmarshalString(tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["runId"] = arg1
+	args["input"] = arg1
 	return args, nil
 
 }
@@ -175,46 +170,23 @@ func field_Mutation_workflowCancel_args(rawArgs map[string]interface{}) (map[str
 func field_Mutation_workflowTerminate_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["workflowId"]; ok {
+	if tmp, ok := rawArgs["reason"]; ok {
 		var err error
 		arg0, err = graphql.UnmarshalString(tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["workflowId"] = arg0
-	var arg1 *string
-	if tmp, ok := rawArgs["runId"]; ok {
-		var err error
-		var ptr1 string
-		if tmp != nil {
-			ptr1, err = graphql.UnmarshalString(tmp)
-			arg1 = &ptr1
-		}
-
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["runId"] = arg1
-	var arg2 string
-	if tmp, ok := rawArgs["reason"]; ok {
-		var err error
-		arg2, err = graphql.UnmarshalString(tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["reason"] = arg2
-	var arg3 string
+	args["reason"] = arg0
+	var arg1 string
 	if tmp, ok := rawArgs["input"]; ok {
 		var err error
-		arg3, err = graphql.UnmarshalString(tmp)
+		arg1, err = graphql.UnmarshalString(tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg3
+	args["input"] = arg1
 	return args, nil
 
 }
@@ -222,46 +194,23 @@ func field_Mutation_workflowTerminate_args(rawArgs map[string]interface{}) (map[
 func field_Mutation_activityPerform_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["workflowId"]; ok {
+	if tmp, ok := rawArgs["activityId"]; ok {
 		var err error
 		arg0, err = graphql.UnmarshalString(tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["workflowId"] = arg0
-	var arg1 *string
-	if tmp, ok := rawArgs["runId"]; ok {
-		var err error
-		var ptr1 string
-		if tmp != nil {
-			ptr1, err = graphql.UnmarshalString(tmp)
-			arg1 = &ptr1
-		}
-
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["runId"] = arg1
-	var arg2 string
-	if tmp, ok := rawArgs["activityId"]; ok {
-		var err error
-		arg2, err = graphql.UnmarshalString(tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["activityId"] = arg2
-	var arg3 string
+	args["activityId"] = arg0
+	var arg1 string
 	if tmp, ok := rawArgs["input"]; ok {
 		var err error
-		arg3, err = graphql.UnmarshalString(tmp)
+		arg1, err = graphql.UnmarshalString(tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg3
+	args["input"] = arg1
 	return args, nil
 
 }
@@ -269,46 +218,23 @@ func field_Mutation_activityPerform_args(rawArgs map[string]interface{}) (map[st
 func field_Mutation_activityFailed_args(rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["workflowId"]; ok {
+	if tmp, ok := rawArgs["activityId"]; ok {
 		var err error
 		arg0, err = graphql.UnmarshalString(tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["workflowId"] = arg0
-	var arg1 *string
-	if tmp, ok := rawArgs["runId"]; ok {
-		var err error
-		var ptr1 string
-		if tmp != nil {
-			ptr1, err = graphql.UnmarshalString(tmp)
-			arg1 = &ptr1
-		}
-
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["runId"] = arg1
-	var arg2 string
-	if tmp, ok := rawArgs["activityId"]; ok {
-		var err error
-		arg2, err = graphql.UnmarshalString(tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["activityId"] = arg2
-	var arg3 string
+	args["activityId"] = arg0
+	var arg1 string
 	if tmp, ok := rawArgs["input"]; ok {
 		var err error
-		arg3, err = graphql.UnmarshalString(tmp)
+		arg1, err = graphql.UnmarshalString(tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg3
+	args["input"] = arg1
 	return args, nil
 
 }
@@ -803,7 +729,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.WorkflowCancel(childComplexity, args["workflowId"].(string), args["runId"].(*string)), true
+		return e.complexity.Mutation.WorkflowCancel(childComplexity, args["reason"].(string), args["input"].(string)), true
 
 	case "Mutation.workflowTerminate":
 		if e.complexity.Mutation.WorkflowTerminate == nil {
@@ -815,7 +741,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.WorkflowTerminate(childComplexity, args["workflowId"].(string), args["runId"].(*string), args["reason"].(string), args["input"].(string)), true
+		return e.complexity.Mutation.WorkflowTerminate(childComplexity, args["reason"].(string), args["input"].(string)), true
 
 	case "Mutation.activityPerform":
 		if e.complexity.Mutation.ActivityPerform == nil {
@@ -827,7 +753,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ActivityPerform(childComplexity, args["workflowId"].(string), args["runId"].(*string), args["activityId"].(string), args["input"].(string)), true
+		return e.complexity.Mutation.ActivityPerform(childComplexity, args["activityId"].(string), args["input"].(string)), true
 
 	case "Mutation.activityFailed":
 		if e.complexity.Mutation.ActivityFailed == nil {
@@ -839,7 +765,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ActivityFailed(childComplexity, args["workflowId"].(string), args["runId"].(*string), args["activityId"].(string), args["input"].(string)), true
+		return e.complexity.Mutation.ActivityFailed(childComplexity, args["activityId"].(string), args["input"].(string)), true
 
 	case "Query.Domain":
 		if e.complexity.Query.Domain == nil {
@@ -1175,8 +1101,7 @@ func (ec *executionContext) _Activity_id(ctx context.Context, field graphql.Coll
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.ID, nil
 	})
 	if resTmp == nil {
@@ -1198,8 +1123,7 @@ func (ec *executionContext) _Activity_activityID(ctx context.Context, field grap
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.ActivityID, nil
 	})
 	if resTmp == nil {
@@ -1221,8 +1145,7 @@ func (ec *executionContext) _Activity_description(ctx context.Context, field gra
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Description, nil
 	})
 	if resTmp == nil {
@@ -1244,8 +1167,7 @@ func (ec *executionContext) _Activity_operation(ctx context.Context, field graph
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Operation, nil
 	})
 	if resTmp == nil {
@@ -1267,8 +1189,7 @@ func (ec *executionContext) _Activity_roles(ctx context.Context, field graphql.C
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Roles, nil
 	})
 	if resTmp == nil {
@@ -1296,8 +1217,7 @@ func (ec *executionContext) _Activity_starttoclosetimeout(ctx context.Context, f
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Starttoclosetimeout, nil
 	})
 	if resTmp == nil {
@@ -1319,8 +1239,7 @@ func (ec *executionContext) _Activity_isDone(ctx context.Context, field graphql.
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.IsDone, nil
 	})
 	if resTmp == nil {
@@ -1342,8 +1261,7 @@ func (ec *executionContext) _Activity_inWork(ctx context.Context, field graphql.
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.InWork, nil
 	})
 	if resTmp == nil {
@@ -1365,8 +1283,7 @@ func (ec *executionContext) _Activity_isCanceled(ctx context.Context, field grap
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.IsCanceled, nil
 	})
 	if resTmp == nil {
@@ -1388,8 +1305,7 @@ func (ec *executionContext) _Activity_Error(ctx context.Context, field graphql.C
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Error, nil
 	})
 	if resTmp == nil {
@@ -1452,8 +1368,7 @@ func (ec *executionContext) _Domain_name(ctx context.Context, field graphql.Coll
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Name, nil
 	})
 	if resTmp == nil {
@@ -1475,8 +1390,7 @@ func (ec *executionContext) _Domain_status(ctx context.Context, field graphql.Co
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Status, nil
 	})
 	if resTmp == nil {
@@ -1498,8 +1412,7 @@ func (ec *executionContext) _Domain_description(ctx context.Context, field graph
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Description, nil
 	})
 	if resTmp == nil {
@@ -1522,8 +1435,7 @@ func (ec *executionContext) _Domain_OwnerEmail(ctx context.Context, field graphq
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.OwnerEmail, nil
 	})
 	if resTmp == nil {
@@ -1546,8 +1458,7 @@ func (ec *executionContext) _Domain_workflows(ctx context.Context, field graphql
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Workflows, nil
 	})
 	if resTmp == nil {
@@ -1647,9 +1558,8 @@ func (ec *executionContext) _Mutation_workflowStart(ctx context.Context, field g
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().WorkflowStart(rctx, args["workflowname"].(string), args["input"].(string))
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Mutation().WorkflowStart(ctx, args["workflowname"].(string), args["input"].(string))
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1677,9 +1587,8 @@ func (ec *executionContext) _Mutation_workflowCancel(ctx context.Context, field 
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().WorkflowCancel(rctx, args["workflowId"].(string), args["runId"].(*string))
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Mutation().WorkflowCancel(ctx, args["reason"].(string), args["input"].(string))
 	})
 	if resTmp == nil {
 		return graphql.Null
@@ -1707,9 +1616,8 @@ func (ec *executionContext) _Mutation_workflowTerminate(ctx context.Context, fie
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().WorkflowTerminate(rctx, args["workflowId"].(string), args["runId"].(*string), args["reason"].(string), args["input"].(string))
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Mutation().WorkflowTerminate(ctx, args["reason"].(string), args["input"].(string))
 	})
 	if resTmp == nil {
 		return graphql.Null
@@ -1737,9 +1645,8 @@ func (ec *executionContext) _Mutation_activityPerform(ctx context.Context, field
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ActivityPerform(rctx, args["workflowId"].(string), args["runId"].(*string), args["activityId"].(string), args["input"].(string))
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Mutation().ActivityPerform(ctx, args["activityId"].(string), args["input"].(string))
 	})
 	if resTmp == nil {
 		return graphql.Null
@@ -1767,9 +1674,8 @@ func (ec *executionContext) _Mutation_activityFailed(ctx context.Context, field 
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ActivityFailed(rctx, args["workflowId"].(string), args["runId"].(*string), args["activityId"].(string), args["input"].(string))
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Mutation().ActivityFailed(ctx, args["activityId"].(string), args["input"].(string))
 	})
 	if resTmp == nil {
 		return graphql.Null
@@ -1861,9 +1767,8 @@ func (ec *executionContext) _Query_Domain(ctx context.Context, field graphql.Col
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Domain(rctx, args["name"].(*string))
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Query().Domain(ctx, args["name"].(*string))
 	})
 	if resTmp == nil {
 		return graphql.Null
@@ -1892,9 +1797,8 @@ func (ec *executionContext) _Query_Workflow(ctx context.Context, field graphql.C
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Workflow(rctx, args["id"].(string))
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Query().Workflow(ctx, args["id"].(string))
 	})
 	if resTmp == nil {
 		return graphql.Null
@@ -1923,9 +1827,8 @@ func (ec *executionContext) _Query_allWorkflows(ctx context.Context, field graph
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().AllWorkflows(rctx, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string), args["domain"].(*string))
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Query().AllWorkflows(ctx, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string), args["domain"].(*string))
 	})
 	if resTmp == nil {
 		return graphql.Null
@@ -1986,9 +1889,8 @@ func (ec *executionContext) _Query_allOpenWorkflows(ctx context.Context, field g
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().AllOpenWorkflows(rctx, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string), args["domain"].(*string))
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Query().AllOpenWorkflows(ctx, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string), args["domain"].(*string))
 	})
 	if resTmp == nil {
 		return graphql.Null
@@ -2049,9 +1951,8 @@ func (ec *executionContext) _Query_allCloseWorkflows(ctx context.Context, field 
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().AllCloseWorkflows(rctx, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string), args["domain"].(*string))
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
+		return ec.resolvers.Query().AllCloseWorkflows(ctx, args["page"].(*int), args["perPage"].(*int), args["sortField"].(*string), args["sortOrder"].(*string), args["filter"].(*string), args["domain"].(*string))
 	})
 	if resTmp == nil {
 		return graphql.Null
@@ -2112,8 +2013,7 @@ func (ec *executionContext) _Query___type(ctx context.Context, field graphql.Col
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
 		return ec.introspectType(args["name"].(string)), nil
 	})
 	if resTmp == nil {
@@ -2137,8 +2037,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, nil, func(ctx context.Context) (interface{}, error) {
 		return ec.introspectSchema(), nil
 	})
 	if resTmp == nil {
@@ -2179,8 +2078,7 @@ func (ec *executionContext) _Subscription_workflow(ctx context.Context, field gr
 	ctx = graphql.WithResolverContext(ctx, &graphql.ResolverContext{
 		Field: field,
 	})
-	rctx := ctx // FIXME: subscriptions are missing request middleware stack https://github.com/99designs/gqlgen/issues/259
-	results, err := ec.resolvers.Subscription().Workflow(rctx)
+	results, err := ec.resolvers.Subscription().Workflow(ctx)
 	if err != nil {
 		ec.Error(ctx, err)
 		return nil
@@ -2284,8 +2182,7 @@ func (ec *executionContext) _Workflow_id(ctx context.Context, field graphql.Coll
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.ID, nil
 	})
 	if resTmp == nil {
@@ -2307,8 +2204,7 @@ func (ec *executionContext) _Workflow_workflowId(ctx context.Context, field grap
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.WorkflowID, nil
 	})
 	if resTmp == nil {
@@ -2330,8 +2226,7 @@ func (ec *executionContext) _Workflow_runId(ctx context.Context, field graphql.C
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.RunID, nil
 	})
 	if resTmp == nil {
@@ -2353,8 +2248,7 @@ func (ec *executionContext) _Workflow_taskList(ctx context.Context, field graphq
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.TaskList, nil
 	})
 	if resTmp == nil {
@@ -2376,8 +2270,7 @@ func (ec *executionContext) _Workflow_name(ctx context.Context, field graphql.Co
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Name, nil
 	})
 	if resTmp == nil {
@@ -2399,8 +2292,7 @@ func (ec *executionContext) _Workflow_startTime(ctx context.Context, field graph
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.StartTime, nil
 	})
 	if resTmp == nil {
@@ -2422,8 +2314,7 @@ func (ec *executionContext) _Workflow_closeTime(ctx context.Context, field graph
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.CloseTime, nil
 	})
 	if resTmp == nil {
@@ -2446,8 +2337,7 @@ func (ec *executionContext) _Workflow_closeStatus(ctx context.Context, field gra
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.CloseStatus, nil
 	})
 	if resTmp == nil {
@@ -2470,8 +2360,7 @@ func (ec *executionContext) _Workflow_historyLength(ctx context.Context, field g
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.HistoryLength, nil
 	})
 	if resTmp == nil {
@@ -2494,8 +2383,7 @@ func (ec *executionContext) _Workflow_jsonHistory(ctx context.Context, field gra
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.JSONHistory, nil
 	})
 	if resTmp == nil {
@@ -2518,8 +2406,7 @@ func (ec *executionContext) _Workflow_result(ctx context.Context, field graphql.
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Result, nil
 	})
 	if resTmp == nil {
@@ -2542,8 +2429,7 @@ func (ec *executionContext) _Workflow_isDone(ctx context.Context, field graphql.
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.IsDone, nil
 	})
 	if resTmp == nil {
@@ -2566,8 +2452,7 @@ func (ec *executionContext) _Workflow_isCanceled(ctx context.Context, field grap
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.IsCanceled, nil
 	})
 	if resTmp == nil {
@@ -2590,8 +2475,7 @@ func (ec *executionContext) _Workflow_inWork(ctx context.Context, field graphql.
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.InWork, nil
 	})
 	if resTmp == nil {
@@ -2614,8 +2498,7 @@ func (ec *executionContext) _Workflow_activities(ctx context.Context, field grap
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Activities, nil
 	})
 	if resTmp == nil {
@@ -2667,8 +2550,7 @@ func (ec *executionContext) _Workflow_createdAt(ctx context.Context, field graph
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.CreatedAt, nil
 	})
 	if resTmp == nil {
@@ -2732,8 +2614,7 @@ func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Name, nil
 	})
 	if resTmp == nil {
@@ -2755,8 +2636,7 @@ func (ec *executionContext) ___Directive_description(ctx context.Context, field 
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Description, nil
 	})
 	if resTmp == nil {
@@ -2775,8 +2655,7 @@ func (ec *executionContext) ___Directive_locations(ctx context.Context, field gr
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Locations, nil
 	})
 	if resTmp == nil {
@@ -2807,8 +2686,7 @@ func (ec *executionContext) ___Directive_args(ctx context.Context, field graphql
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Args, nil
 	})
 	if resTmp == nil {
@@ -2902,8 +2780,7 @@ func (ec *executionContext) ___EnumValue_name(ctx context.Context, field graphql
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Name, nil
 	})
 	if resTmp == nil {
@@ -2925,8 +2802,7 @@ func (ec *executionContext) ___EnumValue_description(ctx context.Context, field 
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Description, nil
 	})
 	if resTmp == nil {
@@ -2945,8 +2821,7 @@ func (ec *executionContext) ___EnumValue_isDeprecated(ctx context.Context, field
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.IsDeprecated, nil
 	})
 	if resTmp == nil {
@@ -2968,8 +2843,7 @@ func (ec *executionContext) ___EnumValue_deprecationReason(ctx context.Context, 
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.DeprecationReason, nil
 	})
 	if resTmp == nil {
@@ -3037,8 +2911,7 @@ func (ec *executionContext) ___Field_name(ctx context.Context, field graphql.Col
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Name, nil
 	})
 	if resTmp == nil {
@@ -3060,8 +2933,7 @@ func (ec *executionContext) ___Field_description(ctx context.Context, field grap
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Description, nil
 	})
 	if resTmp == nil {
@@ -3080,8 +2952,7 @@ func (ec *executionContext) ___Field_args(ctx context.Context, field graphql.Col
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Args, nil
 	})
 	if resTmp == nil {
@@ -3136,8 +3007,7 @@ func (ec *executionContext) ___Field_type(ctx context.Context, field graphql.Col
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Type, nil
 	})
 	if resTmp == nil {
@@ -3167,8 +3037,7 @@ func (ec *executionContext) ___Field_isDeprecated(ctx context.Context, field gra
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.IsDeprecated, nil
 	})
 	if resTmp == nil {
@@ -3190,8 +3059,7 @@ func (ec *executionContext) ___Field_deprecationReason(ctx context.Context, fiel
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.DeprecationReason, nil
 	})
 	if resTmp == nil {
@@ -3249,8 +3117,7 @@ func (ec *executionContext) ___InputValue_name(ctx context.Context, field graphq
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Name, nil
 	})
 	if resTmp == nil {
@@ -3272,8 +3139,7 @@ func (ec *executionContext) ___InputValue_description(ctx context.Context, field
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Description, nil
 	})
 	if resTmp == nil {
@@ -3292,8 +3158,7 @@ func (ec *executionContext) ___InputValue_type(ctx context.Context, field graphq
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Type, nil
 	})
 	if resTmp == nil {
@@ -3323,8 +3188,7 @@ func (ec *executionContext) ___InputValue_defaultValue(ctx context.Context, fiel
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.DefaultValue, nil
 	})
 	if resTmp == nil {
@@ -3391,8 +3255,7 @@ func (ec *executionContext) ___Schema_types(ctx context.Context, field graphql.C
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Types(), nil
 	})
 	if resTmp == nil {
@@ -3447,8 +3310,7 @@ func (ec *executionContext) ___Schema_queryType(ctx context.Context, field graph
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.QueryType(), nil
 	})
 	if resTmp == nil {
@@ -3478,8 +3340,7 @@ func (ec *executionContext) ___Schema_mutationType(ctx context.Context, field gr
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.MutationType(), nil
 	})
 	if resTmp == nil {
@@ -3503,8 +3364,7 @@ func (ec *executionContext) ___Schema_subscriptionType(ctx context.Context, fiel
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.SubscriptionType(), nil
 	})
 	if resTmp == nil {
@@ -3528,8 +3388,7 @@ func (ec *executionContext) ___Schema_directives(ctx context.Context, field grap
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Directives(), nil
 	})
 	if resTmp == nil {
@@ -3630,8 +3489,7 @@ func (ec *executionContext) ___Type_kind(ctx context.Context, field graphql.Coll
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Kind(), nil
 	})
 	if resTmp == nil {
@@ -3653,8 +3511,7 @@ func (ec *executionContext) ___Type_name(ctx context.Context, field graphql.Coll
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Name(), nil
 	})
 	if resTmp == nil {
@@ -3677,8 +3534,7 @@ func (ec *executionContext) ___Type_description(ctx context.Context, field graph
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Description(), nil
 	})
 	if resTmp == nil {
@@ -3703,8 +3559,7 @@ func (ec *executionContext) ___Type_fields(ctx context.Context, field graphql.Co
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Fields(args["includeDeprecated"].(bool)), nil
 	})
 	if resTmp == nil {
@@ -3756,8 +3611,7 @@ func (ec *executionContext) ___Type_interfaces(ctx context.Context, field graphq
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.Interfaces(), nil
 	})
 	if resTmp == nil {
@@ -3809,8 +3663,7 @@ func (ec *executionContext) ___Type_possibleTypes(ctx context.Context, field gra
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.PossibleTypes(), nil
 	})
 	if resTmp == nil {
@@ -3868,8 +3721,7 @@ func (ec *executionContext) ___Type_enumValues(ctx context.Context, field graphq
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.EnumValues(args["includeDeprecated"].(bool)), nil
 	})
 	if resTmp == nil {
@@ -3921,8 +3773,7 @@ func (ec *executionContext) ___Type_inputFields(ctx context.Context, field graph
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.InputFields(), nil
 	})
 	if resTmp == nil {
@@ -3974,8 +3825,7 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 		Field:  field,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
+	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
 		return obj.OfType(), nil
 	})
 	if resTmp == nil {
@@ -4015,7 +3865,7 @@ func (ec *executionContext) introspectType(name string) *introspection.Type {
 }
 
 var parsedSchema = gqlparser.MustLoadSchema(
-	&ast.Source{Name: "/home/misha/go/src/github.com/777or666/testgogql-cadence/models/schema.graphql", Input: `type Domain {	
+	&ast.Source{Name: "C:\\Users\\m.kravetz\\go\\src\\github.com\\777or666\\testgogql-cadence\\models\\schema.graphql", Input: `type Domain {	
  	name: String!
 	status: String!
 	description: String
@@ -4065,10 +3915,10 @@ type Query {
 
 type Mutation {
 	workflowStart(workflowname: String!, input: String!): Workflow!
-	workflowCancel(workflowId: String!, runId: String): String
-	workflowTerminate(workflowId: String!, runId: String, reason: String!, input: String!): String
-	activityPerform(workflowId: String!, runId: String, activityId: String!, input: String!): String	
-	activityFailed(workflowId: String!, runId: String, activityId: String!, input: String!): String	
+	workflowCancel(reason: String!, input: String!): String
+	workflowTerminate(reason: String!, input: String!): String
+	activityPerform(activityId: String!, input: String!): String	
+	activityFailed(activityId: String!, input: String!): String	
 }
 
 type Subscription {

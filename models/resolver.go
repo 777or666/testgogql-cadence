@@ -34,7 +34,8 @@ var PrefixWorkflowFunc string
 var EmailConfiguration *helpers.EmailConfig
 
 const (
-	pathtoworkflows = "axibpmWorkflows/"
+	pathtoworkflows          = "axibpmWorkflows/"
+	templatefileTestworkflow = "templates/emailmaintemplate.html"
 )
 
 type resolver struct {
@@ -51,6 +52,12 @@ func (r *resolver) Subscription() SubscriptionResolver {
 	return &subscriptionResolver{r}
 }
 
+//Инициализация резолвера
+//(!убрать!)urlRestService - адрес сервиса доп. данных к "морде" cadence (вычитывал инфу по domain)
+//domain - домен, задается в настройках. присутствует во всех запросах к cadence
+//prefixworkflowfunc - путь к функциям процессов (например, github.com/777or666/testgogql-cadence/axibpmWorkflows)
+//emailconfig - структура данных для отправки писем (пароли, порты и т.п.)
+//hw - helper для работы с функциями cadence
 func New(urlRestService string, applicationName string, domain string, prefixworkflowfunc string, emailconfig *helpers.EmailConfig, hw *helpers.SampleHelper) Config {
 	UrlRestService = urlRestService
 	ApplicationName = applicationName
@@ -68,6 +75,39 @@ func New(urlRestService string, applicationName string, domain string, prefixwor
 	}
 
 	return Config{Resolvers: &resolver{}}
+}
+
+//Разбор input параметров (JSON строка)
+//возвращает структуру с вытянутыми данными и список е-маил для рассылки
+func unmarshailnInput(input string) (helpers.WorkflowInput, []string, error) {
+	//Маршалинг данных из input
+	wrfinput := helpers.WorkflowInput{}
+
+	if err := json.Unmarshal([]byte(input), &wrfinput); err != nil {
+		log.Println("Ошибка маршалинга JSON данных из input", err.Error())
+		return helpers.WorkflowInput{}, nil, err
+	}
+
+	emails := wrfinput.WorkflowEmails
+
+	var addressees []string
+	//ВНИМАНИЕ! Пока все адреса добавляются в кучу!! ПЕРЕДЕЛАТЬ
+	//добавляем адреса ответственных за процесс
+	for _, value := range emails.EmailResponsible {
+		if value != wrfinput.UserData.Useremail {
+			addressees = append(addressees, value)
+		}
+	}
+	//добавляем адреса участников процесса
+	for _, value := range emails.EmailParticipants {
+		if value != wrfinput.UserData.Useremail {
+			addressees = append(addressees, value)
+		}
+	}
+	//добавляем адрес пользователя
+	addressees = append(addressees, wrfinput.UserData.Useremail)
+
+	return wrfinput, addressees, nil
 }
 
 type mutationResolver struct{ *resolver }
@@ -92,6 +132,7 @@ type mutationResolver struct{ *resolver }
 //  },
 //  "workflowsettings": {
 //    "WorkflowId": "TKP-181116-62301",
+//	  "RunId": "",
 //    "ExecutionStartToCloseTimeout": "10",
 //    "DecisionTaskStartToCloseTimeout": "10"
 //  },
@@ -187,37 +228,105 @@ func (r *mutationResolver) WorkflowStart(ctx context.Context, workflowname strin
 
 	return wrf, nil //nil заменить на err
 }
-func (r *mutationResolver) WorkflowCancel(ctx context.Context, workflowId string, runId *string) (*string, error) {
+func (r *mutationResolver) WorkflowCancel(ctx context.Context, reason string, input string) (*string, error) {
 	result := "Бизнес-процесс отменен"
 
-	err := workflowClient.CancelWorkflow(context.Background(), workflowId, *runId)
+	//разбираем input
+	wrfinput, addressees, err := unmarshailnInput(input)
+	if err != nil {
+		return nil, err
+	}
+
+	id := wrfinput.WorkflowSettings.WorkflowId
+	runid := wrfinput.WorkflowSettings.RunId
+
+	err = workflowClient.CancelWorkflow(context.Background(), id, runid)
 	if err != nil {
 		log.Println("ОШИБКА! Не удалось отменить бизнес-процесс. " + err.Error())
 
 		return nil, err
 	}
 
+	//отправляем е-маил
+	subject := "ПРОЦЕСС ОТМЕНЕН (" + id + ")"
+	emailbody := ""
+	emailrequest := helpers.EmailRequest{
+		To:      addressees,
+		Subject: subject,
+		Body:    emailbody,
+		Config:  EmailConfiguration,
+	}
+
+	emaildata := helpers.EmailRequestData{
+		Message:      "Принудительная отмена процесса. Причина: " + reason,
+		WorkflowData: wrfinput,
+	}
+
+	emailrequest.ParseEmailTemplate(templatefileTestworkflow, emaildata)
+	resemail, emailerr := emailrequest.SendEmail()
+	if !resemail {
+		log.Println("WorkflowId: " + id + " Не удалось отправить е-маил! Ошибка: " + emailerr.Error())
+		return nil, err
+	}
+
 	return &result, nil
 }
-func (r *mutationResolver) WorkflowTerminate(ctx context.Context, workflowId string, runId *string, reason string, input string) (*string, error) {
+func (r *mutationResolver) WorkflowTerminate(ctx context.Context, reason string, input string) (*string, error) {
 	result := "Бизнес-процесс прерван"
-	details := input
 
-	err := workflowClient.TerminateWorkflow(context.Background(), workflowId, *runId, reason, []byte(details))
+	wrfinput, addressees, err := unmarshailnInput(input)
+	if err != nil {
+		return nil, err
+	}
+
+	id := wrfinput.WorkflowSettings.WorkflowId
+	runid := wrfinput.WorkflowSettings.RunId
+
+	err = workflowClient.TerminateWorkflow(context.Background(), id, runid, reason, []byte(input))
 	if err != nil {
 		log.Println("ОШИБКА! Не удалось прервать бизнес-процесс. " + err.Error())
 
 		return nil, err
 	}
 
+	//отправляем е-маил
+	subject := "ПРОЦЕСС ПРЕРВАН (" + id + ")"
+	emailbody := ""
+	emailrequest := helpers.EmailRequest{
+		To:      addressees,
+		Subject: subject,
+		Body:    emailbody,
+		Config:  EmailConfiguration,
+	}
+
+	emaildata := helpers.EmailRequestData{
+		Message:      "Принудительное завершение процесса. Причина: " + reason,
+		WorkflowData: wrfinput,
+	}
+
+	emailrequest.ParseEmailTemplate(templatefileTestworkflow, emaildata)
+	resemail, emailerr := emailrequest.SendEmail()
+	if !resemail {
+		log.Println("WorkflowId: " + id + " Не удалось отправить е-маил! Ошибка: " + emailerr.Error())
+		return nil, err
+	}
+
 	return &result, nil
 }
-func (r *mutationResolver) ActivityPerform(ctx context.Context, workflowId string, runId *string, activityId string, input string) (*string, error) {
+func (r *mutationResolver) ActivityPerform(ctx context.Context, activityId string, input string) (*string, error) {
 	result := "Операция выполнена"
+
+	wrfinput, addressees, err := unmarshailnInput(input)
+	if err != nil {
+		return nil, err
+	}
+
+	id := wrfinput.WorkflowSettings.WorkflowId
+	runid := wrfinput.WorkflowSettings.RunId
 
 	log.Println("ActivityPerform! Старт")
 
-	err := workflowClient.CompleteActivityByID(context.Background(), ApplicationDomain, workflowId, *runId, activityId, input, nil)
+	err = workflowClient.CompleteActivityByID(context.Background(), ApplicationDomain, id, runid, activityId, input, nil)
 	if err != nil {
 
 		log.Println("ОШИБКА! Не удалось выполнить операцию. " + err.Error())
@@ -225,17 +334,69 @@ func (r *mutationResolver) ActivityPerform(ctx context.Context, workflowId strin
 		return nil, err
 	}
 
+	//отправляем е-маил
+	subject := activityId + ". " + wrfinput.WorkflowData.Activity + ". ВЫПОЛНЕНО (" + id + ")"
+	emailbody := ""
+	emailrequest := helpers.EmailRequest{
+		To:      addressees,
+		Subject: subject,
+		Body:    emailbody,
+		Config:  EmailConfiguration,
+	}
+
+	emaildata := helpers.EmailRequestData{
+		Message:      "Операция '" + wrfinput.WorkflowData.Activity + "' выполнена (" + activityId + ")",
+		WorkflowData: wrfinput,
+	}
+
+	emailrequest.ParseEmailTemplate(templatefileTestworkflow, emaildata)
+	resemail, emailerr := emailrequest.SendEmail()
+	if !resemail {
+		log.Println("WorkflowId: " + id + " Не удалось отправить е-маил! Ошибка: " + emailerr.Error())
+		return nil, err
+	}
+
 	return &result, nil
 }
-func (r *mutationResolver) ActivityFailed(ctx context.Context, workflowId string, runId *string, activityId string, input string) (*string, error) {
+func (r *mutationResolver) ActivityFailed(ctx context.Context, activityId string, input string) (*string, error) {
 	result := "Операция отменена"
 
+	wrfinput, addressees, err := unmarshailnInput(input)
+	if err != nil {
+		return nil, err
+	}
+
+	id := wrfinput.WorkflowSettings.WorkflowId
+	runid := wrfinput.WorkflowSettings.RunId
+
 	//добавить детали - причину отмены активности и кто ее отменил
-	err := workflowClient.CompleteActivityByID(context.Background(), ApplicationDomain, workflowId, *runId, activityId, nil, cadence.NewCustomError(input, result))
+	err = workflowClient.CompleteActivityByID(context.Background(), ApplicationDomain, id, runid, activityId, nil, cadence.NewCustomError(result, input))
 	if err != nil {
 
 		log.Println("ОШИБКА! Не удалось отменить операцию. " + err.Error())
 
+		return nil, err
+	}
+
+	//отправляем е-маил
+	subject := activityId + ". " + wrfinput.WorkflowData.Activity + ". НЕ ВЫПОЛНЕНО (" + id + ")"
+	emailbody := ""
+	emailrequest := helpers.EmailRequest{
+		To:      addressees,
+		Subject: subject,
+		Body:    emailbody,
+		Config:  EmailConfiguration,
+	}
+
+	emaildata := helpers.EmailRequestData{
+		Message:      "Операция '" + wrfinput.WorkflowData.Activity + "' не выполнена (" + activityId + "). Причина: отменена пользователем",
+		WorkflowData: wrfinput,
+	}
+
+	emailrequest.ParseEmailTemplate(templatefileTestworkflow, emaildata)
+	resemail, emailerr := emailrequest.SendEmail()
+	if !resemail {
+		log.Println("WorkflowId: " + id + " Не удалось отправить е-маил! Ошибка: " + emailerr.Error())
 		return nil, err
 	}
 

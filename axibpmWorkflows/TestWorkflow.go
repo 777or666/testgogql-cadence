@@ -48,12 +48,18 @@ func TestWorkflow(ctx workflow.Context, wrfinput helpers.WorkflowInput) (result 
 	//ВНИМАНИЕ! Пока все адреса добавляются в кучу!! ПЕРЕДЕЛАТЬ
 	//добавляем адреса ответственных за процесс
 	for _, value := range emails.EmailResponsible {
-		addressees = append(addressees, value)
+		if value != wrfinput.UserData.Useremail {
+			addressees = append(addressees, value)
+		}
 	}
 	//добавляем адреса участников процесса
 	for _, value := range emails.EmailParticipants {
-		addressees = append(addressees, value)
+		if value != wrfinput.UserData.Useremail {
+			addressees = append(addressees, value)
+		}
 	}
+	//добавляем адрес пользователя
+	addressees = append(addressees, wrfinput.UserData.Useremail)
 
 	emailrequest := helpers.EmailRequest{
 		To:      addressees,
@@ -161,9 +167,9 @@ func TestWorkflow(ctx workflow.Context, wrfinput helpers.WorkflowInput) (result 
 		var prichina string = ""
 
 		if err.Error() == "CanceledError" {
-			prichina = "Процесс принудительно остановлен."
+			prichina = "Процесс принудительно остановлен"
 		} else if s.Contains(err.Error(), "TimeoutType") {
-			prichina = "Просрочен срок."
+			prichina = "Просрочен срок"
 		} else {
 			prichina = err.Error()
 		}
@@ -271,9 +277,9 @@ func TestWorkflow(ctx workflow.Context, wrfinput helpers.WorkflowInput) (result 
 		var prichina string = ""
 
 		if err.Error() == "CanceledError" {
-			prichina = "Процесс принудительно остановлен."
+			prichina = "Процесс принудительно остановлен"
 		} else if s.Contains(err.Error(), "TimeoutType") {
-			prichina = "Просрочен срок."
+			prichina = "Просрочен срок"
 		} else {
 			prichina = err.Error()
 		}
@@ -306,7 +312,7 @@ func TestWorkflow(ctx workflow.Context, wrfinput helpers.WorkflowInput) (result 
 	}
 
 	emaildata = helpers.EmailRequestData{
-		Message:      "<= Процесс успешно завершен",
+		Message:      config.WorkflowName + " <= Процесс успешно завершен",
 		WorkflowData: wrfinput,
 	}
 
