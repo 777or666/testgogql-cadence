@@ -27,7 +27,7 @@ type Workflow {
 
 type Activity{
 	id: ID!	
-	activityID: String!
+	activityId: String!
 	description: String!
 	operation: String!
 	roles: [String!]

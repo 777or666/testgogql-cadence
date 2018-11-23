@@ -8,7 +8,7 @@ import (
 
 type Activity struct {
 	ID                  string   `json:"id"`
-	ActivityID          string   `json:"activityID"`
+	ActivityId          string   `json:"activityId"`
 	Description         string   `json:"description"`
 	Operation           string   `json:"operation"`
 	Roles               []string `json:"roles"`

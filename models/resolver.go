@@ -204,7 +204,7 @@ func (r *mutationResolver) WorkflowStart(ctx context.Context, workflowname strin
 	for _, v := range Config.WorkflowActivity {
 		if v.ActivityId != "" {
 			temp := Activity{
-				ActivityID:          v.ActivityId,
+				ActivityId:          v.ActivityId,
 				Description:         v.Description,
 				Operation:           v.Operation,
 				Roles:               v.Roles,

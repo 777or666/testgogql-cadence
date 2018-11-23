@@ -609,7 +609,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Activity.Id(childComplexity), true
 
-	case "Activity.activityID":
+	case "Activity.activityId":
 		if e.complexity.Activity.ActivityId == nil {
 			break
 		}
@@ -1040,8 +1040,8 @@ func (ec *executionContext) _Activity(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
-		case "activityID":
-			out.Values[i] = ec._Activity_activityID(ctx, field, obj)
+		case "activityId":
+			out.Values[i] = ec._Activity_activityId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -1116,7 +1116,7 @@ func (ec *executionContext) _Activity_id(ctx context.Context, field graphql.Coll
 }
 
 // nolint: vetshadow
-func (ec *executionContext) _Activity_activityID(ctx context.Context, field graphql.CollectedField, obj *Activity) graphql.Marshaler {
+func (ec *executionContext) _Activity_activityId(ctx context.Context, field graphql.CollectedField, obj *Activity) graphql.Marshaler {
 	rctx := &graphql.ResolverContext{
 		Object: "Activity",
 		Args:   nil,
@@ -1124,7 +1124,7 @@ func (ec *executionContext) _Activity_activityID(ctx context.Context, field grap
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(ctx context.Context) (interface{}, error) {
-		return obj.ActivityID, nil
+		return obj.ActivityId, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -3894,7 +3894,7 @@ type Workflow {
 
 type Activity{
 	id: ID!	
-	activityID: String!
+	activityId: String!
 	description: String!
 	operation: String!
 	roles: [String!]

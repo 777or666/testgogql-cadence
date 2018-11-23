@@ -40,30 +40,30 @@ func (r *EmailRequest) SendEmail() (bool, error) {
 	//			r.Config.Emailpassword,
 	//			r.Config.Emailhost)
 
-	// АКСИТЕХ
-	auth := unencryptedAuth{
-		smtp.PlainAuth(
-			r.Config.Emailidentity,
-			r.Config.Emailusername,
-			r.Config.Emailpassword,
-			r.Config.Emailhost),
-	}
+	//	// АКСИТЕХ
+	//	auth := unencryptedAuth{
+	//		smtp.PlainAuth(
+	//			r.Config.Emailidentity,
+	//			r.Config.Emailusername,
+	//			r.Config.Emailpassword,
+	//			r.Config.Emailhost),
+	//	}
 
-	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
-	subject := "Subject: " + r.Subject + "\n"
-	msg := []byte(subject + mime + "\n" + r.Body)
+	//	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
+	//	subject := "Subject: " + r.Subject + "\n"
+	//	msg := []byte(subject + mime + "\n" + r.Body)
 
-	err := smtp.SendMail(
-		r.Config.Emailhost+":"+r.Config.Emailport,
-		auth,
-		r.Config.Emailfrom,
-		r.To,
-		msg,
-	)
+	//	err := smtp.SendMail(
+	//		r.Config.Emailhost+":"+r.Config.Emailport,
+	//		auth,
+	//		r.Config.Emailfrom,
+	//		r.To,
+	//		msg,
+	//	)
 
-	if err != nil {
-		return false, err
-	}
+	//	if err != nil {
+	//		return false, err
+	//	}
 	return true, nil
 }
 
